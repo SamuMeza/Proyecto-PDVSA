@@ -45,6 +45,30 @@ CREATE TABLE IF NOT EXISTS usuarios (
     INDEX idx_usuarios_sesion_token (sesion_activa_token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tabla de configuración del sistema
+CREATE TABLE IF NOT EXISTS configuracion_sistema (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    clave VARCHAR(100) NOT NULL UNIQUE,
+    valor TEXT NULL,
+    descripcion TEXT NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla de OTP para autenticación de dos factores
+CREATE TABLE IF NOT EXISTS usuario_otp (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL UNIQUE,
+    codigo VARCHAR(6) NOT NULL,
+    expiracion_en TIMESTAMP NOT NULL,
+    generados_hoy INT DEFAULT 0,
+    fecha_ultimo_generado DATE NULL,
+    intentos_fallidos INT DEFAULT 0,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usuario_otp_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Roles iniciales del sistema
 INSERT INTO roles (nombre, permisos_json, descripcion) VALUES
 ('Administrador', '{}', 'Gestión total del sistema'),

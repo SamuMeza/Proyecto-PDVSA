@@ -91,6 +91,15 @@ a:hover {
     font-weight: 700;
     color: var(--color-light);
     letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sidebar-brand img {
+    max-height: 32px;
+    width: auto;
+    display: block;
 }
 
 .sidebar-brand span {

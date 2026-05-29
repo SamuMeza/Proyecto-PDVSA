@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../auth/auth_functions.php';
+requerirPermiso('preventivas', 'ver');
+
 $pageTitle = 'Órdenes preventivas';
 $pageSlug  = 'preventivas';
 require __DIR__ . '/includes/layout.php';

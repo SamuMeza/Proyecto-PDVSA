@@ -47,6 +47,29 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol_id);
 CREATE INDEX IF NOT EXISTS idx_usuarios_estado ON usuarios(estado);
 CREATE INDEX IF NOT EXISTS idx_usuarios_sesion_token ON usuarios(sesion_activa_token);
 
+-- Tabla de configuración del sistema
+CREATE TABLE IF NOT EXISTS configuracion_sistema (
+    id SERIAL PRIMARY KEY,
+    clave VARCHAR(100) NOT NULL UNIQUE,
+    valor TEXT NULL,
+    descripcion TEXT NULL,
+    creado_en TIMESTAMP DEFAULT NOW(),
+    actualizado_en TIMESTAMP DEFAULT NOW()
+);
+
+-- Tabla de OTP para autenticación de dos factores
+CREATE TABLE IF NOT EXISTS usuario_otp (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER NOT NULL UNIQUE REFERENCES usuarios(id),
+    codigo VARCHAR(6) NOT NULL,
+    expiracion_en TIMESTAMP NOT NULL,
+    generados_hoy INTEGER DEFAULT 0,
+    fecha_ultimo_generado DATE NULL,
+    intentos_fallidos INTEGER DEFAULT 0,
+    creado_en TIMESTAMP DEFAULT NOW(),
+    actualizado_en TIMESTAMP DEFAULT NOW()
+);
+
 -- Roles iniciales
 INSERT INTO roles (nombre, permisos_json, descripcion) VALUES
 ('Administrador', '{}', 'Gestión total del sistema'),
