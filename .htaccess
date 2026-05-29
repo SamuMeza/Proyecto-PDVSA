@@ -1,0 +1,11 @@
+# Redirigir la raíz del proyecto hacia public
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /sistema_pdvsa/
+
+    RewriteRule ^$ public/index.php [L]
+
+    # Proteger carpetas sensibles (solo acceso vía PHP interno)
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^sql/ - [F,L]
+</IfModule>
