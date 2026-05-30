@@ -1,34 +1,33 @@
 <?php
-require_once __DIR__ . '/../auth/auth_functions.php';
+require_once __DIR__ . '/../config/autoload.php';
 
-iniciarSesionPhp();
+use App\Core\Session;
+use App\Services\AuthService;
+use App\Models\User;
+
+Session::start();
+
+if (!AuthService::check()) {
+    http_response_code(401);
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => false]);
+    exit;
+}
+
+$userId = (int) Session::get('usuario_id');
+$token = Session::get('sesion_token');
+$renewed = AuthService::renewSession($userId, $token);
+
+if (!$renewed) {
+    http_response_code(401);
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => false]);
+    exit;
+}
+
+$user = User::find($userId);
+$expiresAt = $user['sesion_expira_en'] ?? '';
+
 header('Content-Type: application/json');
-
-if (!estaAutenticado()) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'error' => 'No autenticado']);
-    exit;
-}
-
-$usuarioId = (int) ($_SESSION['usuario_id'] ?? 0);
-$token = $_SESSION['sesion_token'] ?? '';
-
-if (!$usuarioId || !$token) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'error' => 'Sesión inválida']);
-    exit;
-}
-
-if (!renovarSesion($usuarioId, $token)) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'error' => 'No se pudo renovar la sesión']);
-    exit;
-}
-
-$usuario = usuarioPorId($usuarioId);
-$expira = $usuario['sesion_expira_en'] ?? null;
-
-echo json_encode([
-    'ok' => true,
-    'expires_at' => $expira,
-]);
+echo json_encode(['ok' => true, 'expires_at' => $expiresAt]);
+exit;

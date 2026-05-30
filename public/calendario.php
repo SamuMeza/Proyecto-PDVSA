@@ -1,23 +1,32 @@
 <?php
-require_once __DIR__ . '/../auth/auth_functions.php';
-requerirAutenticacion();
+require_once __DIR__ . '/../config/autoload.php';
 
-$pdo = getDbConnection();
+use App\Core\App;
+use App\Core\Session;
+use App\Core\Database;
+use App\Services\AuthService;
+use App\Models\ConfiguracionSistema;
+use App\Models\CategoriaEquipo;
+use App\Models\OrdenPreventiva;
 
-$rolActual = $_SESSION['rol_nombre'] ?? '';
-$puedeCrear = esAdministrador();
-$puedeEditar = esAdministrador() || in_array($rolActual, ['Supervisor', 'Planificador/Programador'], true);
-$puedeEliminar = esAdministrador();
+AuthService::requireAuth();
+
+$pdo = Database::connection();
+
+$rolActual = Session::get('rol_nombre', '');
+$puedeCrear = AuthService::isAdmin();
+$puedeEditar = AuthService::isAdmin() || in_array($rolActual, ['Supervisor', 'Planificador/Programador'], true);
+$puedeEliminar = AuthService::isAdmin();
 
 $viewMode = in_array($_GET['view'] ?? 'week', ['week', 'month'], true) ? $_GET['view'] : 'week';
 $familiaFilter = trim($_GET['familia'] ?? '');
 $dayDetail = (int) ($_GET['day'] ?? 0);
 
-$familias = $pdo->query(
+$familias = CategoriaEquipo::raw(
     "SELECT DISTINCT c.nombre, c.color_calendario FROM categorias_equipo c WHERE c.estado = 'activo' ORDER BY c.nombre"
-)->fetchAll();
+);
 
-$coloresConfigJson = obtenerConfiguracionSistema('colores_familia_calendario', '{}');
+$coloresConfigJson = ConfiguracionSistema::get('colores_familia_calendario', '{}');
 $coloresConfig = json_decode($coloresConfigJson, true) ?: [];
 
 if ($viewMode === 'week') {
@@ -37,19 +46,16 @@ if ($viewMode === 'week') {
         $params[] = $familiaFilter;
     }
 
-    $query = sprintf(
+    $ordenes = OrdenPreventiva::raw(
         'SELECT op.id, op.codigo_unico, op.fecha_planificada, op.hora_inicio, op.hora_fin,
                 op.estado, e.nombre AS equipo_nombre, c.nombre AS familia, c.color_calendario
          FROM ordenes_preventivas op
          JOIN equipos e ON e.id = op.equipo_id
          JOIN categorias_equipo c ON c.id = e.categoria_id
-         WHERE %s
+         WHERE ' . implode(' AND ', $where) . '
          ORDER BY op.fecha_planificada ASC, op.hora_inicio ASC',
-        implode(' AND ', $where)
+        $params
     );
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
-    $ordenes = $stmt->fetchAll();
 
     $eventosPorDia = [];
     foreach ($ordenes as $o) {
@@ -95,7 +101,7 @@ if ($viewMode === 'month') {
         $params[] = $familiaFilter;
     }
 
-    $query = sprintf(
+    $ordenes = OrdenPreventiva::raw(
         'SELECT op.id, op.codigo_unico, op.fecha_planificada, op.hora_inicio, op.hora_fin,
                 op.estado, e.nombre AS equipo_nombre, c.nombre AS familia, c.color_calendario,
                 nm.nombre AS nivel
@@ -103,13 +109,10 @@ if ($viewMode === 'month') {
          JOIN equipos e ON e.id = op.equipo_id
          JOIN categorias_equipo c ON c.id = e.categoria_id
          LEFT JOIN niveles_mantenimiento nm ON nm.id = op.nivel_mantenimiento_id
-         WHERE %s
+         WHERE ' . implode(' AND ', $where) . '
          ORDER BY op.fecha_planificada ASC, op.hora_inicio ASC',
-        implode(' AND ', $where)
+        $params
     );
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
-    $ordenes = $stmt->fetchAll();
 
     $eventosPorDia = [];
     $ordenesPorDia = [];
@@ -187,7 +190,7 @@ require __DIR__ . '/includes/layout.php';
                                         <?php if (isset($eventosPorDia[$d][$h])): ?>
                                             <?php foreach ($eventosPorDia[$d][$h] as $ev): ?>
                                                 <div class="cal-event" style="background:<?= htmlspecialchars($ev['color']) ?>20; border-left:3px solid <?= htmlspecialchars($ev['color']) ?>; padding:2px 4px; margin:1px 0; font-size:0.75rem; border-radius:2px;">
-                                                    <a href="<?= BASE_PATH ?>/public/preventivas.php?view=<?= $ev['id'] ?>" style="color:inherit;text-decoration:none;">
+                                                    <a href="<?= App::BASE_PATH ?>/public/preventivas.php?view=<?= $ev['id'] ?>" style="color:inherit;text-decoration:none;">
                                                         <strong><?= htmlspecialchars($ev['codigo']) ?></strong>
                                                         <?= htmlspecialchars($ev['equipo']) ?>
                                                         <?php if ($ev['inicio']): ?><br><small><?= htmlspecialchars(substr($ev['inicio'], 0, 5)) ?>-<?= htmlspecialchars(substr($ev['fin'], 0, 5)) ?></small><?php endif; ?>
@@ -267,17 +270,9 @@ require __DIR__ . '/includes/layout.php';
                 <div class="page-card">
                     <h3>Órdenes del día <?= htmlspecialchars(sprintf('%02d', $selectedDay)) ?>/<?= htmlspecialchars(sprintf('%02d', $mesNum)) ?>/<?= htmlspecialchars($year) ?></h3>
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Equipo</th>
-                                <th>Familia</th>
-                                <th>Horario</th>
-                                <th>Nivel</th>
-                                <th>Estado</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
+                        <thead><tr>
+                            <th>Código</th><th>Equipo</th><th>Familia</th><th>Horario</th><th>Nivel</th><th>Estado</th><th>Acción</th>
+                        </tr></thead>
                         <tbody>
                             <?php foreach ($selectedDayOrders as $ev): ?>
                                 <?php $evColor = $coloresConfig[$ev['familia']] ?? $ev['color_calendario'] ?? '#7BA7D9'; ?>
@@ -288,7 +283,7 @@ require __DIR__ . '/includes/layout.php';
                                     <td><?= $ev['hora_inicio'] ? htmlspecialchars(substr($ev['hora_inicio'], 0, 5)) . ' - ' . htmlspecialchars(substr($ev['hora_fin'], 0, 5)) : '—' ?></td>
                                     <td><?= htmlspecialchars($ev['nivel'] ?? '—') ?></td>
                                     <td><span class="tag tag-<?= htmlspecialchars($ev['estado']) ?>"><?= htmlspecialchars(ucfirst($ev['estado'])) ?></span></td>
-                                    <td><a href="<?= BASE_PATH ?>/public/preventivas.php?view=<?= $ev['id'] ?>" class="btn btn-outline small-action">Ver</a></td>
+                                    <td><a href="<?= App::BASE_PATH ?>/public/preventivas.php?view=<?= $ev['id'] ?>" class="btn btn-outline small-action">Ver</a></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

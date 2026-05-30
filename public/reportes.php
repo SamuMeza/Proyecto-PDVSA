@@ -1,13 +1,14 @@
 <?php
-require_once __DIR__ . '/../auth/auth_functions.php';
-requerirPermiso('reportes', 'ver');
+require_once __DIR__ . '/../config/autoload.php';
+
+use App\Core\App;
+use App\Services\AuthService;
+
+AuthService::requirePermission('reportes', 'ver');
 
 $pageTitle = 'Reportes';
-$pageSlug  = 'reportes';
+$pageSlug = 'reportes';
+
 require __DIR__ . '/includes/layout.php';
-?>
-                <h1 class="page-title">Reportes</h1>
-                <div class="page-card">
-                    <p>Módulo de reportes — contenido en desarrollo.</p>
-                </div>
-<?php require __DIR__ . '/includes/layout_footer.php'; ?>
+require __DIR__ . '/../src/Views/reportes/index.php';
+require __DIR__ . '/includes/layout_footer.php';

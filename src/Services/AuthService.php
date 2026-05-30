@@ -199,6 +199,11 @@ class AuthService
         return ['ok' => true, 'id' => $id];
     }
 
+    public static function generateOtpForUser(array $user): array
+    {
+        return self::generateOtp($user);
+    }
+
     private static function generateOtp(array $user): array
     {
         $userId = (int) $user['id'];

@@ -1,6 +1,9 @@
 <?php
-require_once __DIR__ . '/auth_functions.php';
+require_once __DIR__ . '/../config/autoload.php';
 
-cerrarSesionUsuario();
-header('Location: ' . BASE_PATH . '/auth/login.php');
+use App\Core\App;
+use App\Services\AuthService;
+
+AuthService::logout();
+header('Location: ' . App::BASE_PATH . '/auth/login.php');
 exit;

@@ -1,50 +1,51 @@
 <?php
-require_once __DIR__ . '/../auth/auth_functions.php';
-requerirAutenticacion();
+require_once __DIR__ . '/../config/autoload.php';
 
-$pdo = getDbConnection();
+use App\Core\App;
+use App\Core\Session;
+use App\Core\Database;
+use App\Services\AuthService;
+use App\Services\CorrectivaService;
+use App\Models\OrdenCorrectiva;
+use App\Models\TipoFalla;
+use App\Models\PrioridadFalla;
+use App\Models\CategoriaEquipo;
+use App\Models\Zona;
+use App\Models\Equipo;
+use App\Models\Checklist;
+use App\Models\EjecucionChecklistItem;
+use App\Models\FotoCorrectiva;
+use App\Models\LogAuditoria;
+use App\Helpers\SecurityHelper;
 
-$puedeCrear = esAdministrador() || tienePermiso('correctivas', 'crear');
-$puedeEditar = esAdministrador() || tienePermiso('correctivas', 'editar');
-$puedeCambiarEstado = esAdministrador() || tienePermiso('correctivas', 'cambiar_estado');
-$puedeEliminar = esAdministrador() || tienePermiso('correctivas', 'eliminar');
+AuthService::requireAuth();
 
-if (!esAdministrador() && !tienePermiso('correctivas', 'ver')) {
-    header('Location: ' . BASE_PATH . '/public/index.php?error=sin_permiso');
+$pdo = Database::connection();
+
+$puedeCrear = AuthService::isAdmin() || AuthService::hasPermission('correctivas', 'crear');
+$puedeEditar = AuthService::isAdmin() || AuthService::hasPermission('correctivas', 'editar');
+$puedeCambiarEstado = AuthService::isAdmin() || AuthService::hasPermission('correctivas', 'cambiar_estado');
+$puedeEliminar = AuthService::isAdmin() || AuthService::hasPermission('correctivas', 'eliminar');
+
+if (!AuthService::isAdmin() && !AuthService::hasPermission('correctivas', 'ver')) {
+    header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
     exit;
 }
 
-$tiposFalla = $pdo->query("SELECT id, nombre FROM tipos_falla WHERE estado = 'activo' ORDER BY nombre")->fetchAll();
-$prioridades = $pdo->query("SELECT id, nombre, color_alert FROM prioridades_falla WHERE estado = 'activo' ORDER BY nombre")->fetchAll();
-$categorias = $pdo->query("SELECT id, nombre FROM categorias_equipo WHERE estado = 'activo' ORDER BY nombre")->fetchAll();
-$zonas = $pdo->query("SELECT id, nombre FROM zonas WHERE estado = 'activo' ORDER BY nombre")->fetchAll();
-$usuariosActivos = $pdo->query("SELECT id, nombre_completo FROM usuarios WHERE estado = 'activo' ORDER BY nombre_completo")->fetchAll();
-$checklists = $pdo->query("SELECT c.id, c.nombre_checklist, nm.nombre AS nivel FROM checklists c LEFT JOIN niveles_mantenimiento nm ON nm.id = c.nivel_mantenimiento_id WHERE c.estado = 'activo' ORDER BY c.nombre_checklist")->fetchAll();
+$tiposFalla = TipoFalla::allActive();
+$prioridades = PrioridadFalla::allActive();
+$categorias = CategoriaEquipo::allActive();
+$zonas = Zona::allActive();
+$usuariosActivos = \App\Models\User::raw("SELECT id, nombre_completo FROM usuarios WHERE estado = 'activo' ORDER BY nombre_completo");
+$checklists = Checklist::raw(
+    "SELECT c.id, c.nombre_checklist, nm.nombre AS nivel FROM checklists c LEFT JOIN niveles_mantenimiento nm ON nm.id = c.nivel_mantenimiento_id WHERE c.estado = 'activo' ORDER BY c.nombre_checklist"
+);
 
-$transiciones = [
-    'reportada' => ['en_progreso', 'cancelada'],
-    'en_progreso' => ['completada', 'cancelada'],
-    'completada' => ['cerrada'],
-    'cerrada' => [],
-    'cancelada' => [],
-];
-
-$error = '';
-$mensaje = '';
-$formData = [
-    'id' => '',
-    'equipo_id' => '',
-    'tipo_falla_id' => '',
-    'prioridad_id' => '',
-    'zona_id' => '',
-    'descripcion_falla' => '',
-    'acciones_tomadas' => '',
-    'causa_raiz' => '',
-    'repuestos_utilizados' => '',
-    'supervisor_asigno_id' => '',
-    'mantenedor_id' => '',
-    'checklist_id' => '',
-];
+$transiciones = OrdenCorrectiva::validStates();
+$transicionesMap = [];
+foreach ($transiciones as $estado) {
+    $transicionesMap[$estado] = OrdenCorrectiva::allowedTransitions($estado);
+}
 
 function registrarAuditoria(PDO $pdo, string $accion, ?int $registroId, ?string $datosAnteriores, ?string $datosNuevos, string $descripcion): void
 {
@@ -53,40 +54,17 @@ function registrarAuditoria(PDO $pdo, string $accion, ?int $registroId, ?string 
         'INSERT INTO logs_auditoria (usuario_id, accion, tabla_afectada, registro_afectado_id, datos_anteriores_json, datos_nuevos_json, direccion_ip, descripcion)
          VALUES (?, ?, \'ordenes_correctivas\', ?, ?, ?, ?, ?)'
     );
-    $stmt->execute([
-        $_SESSION['usuario_id'],
-        $accion,
-        $registroId,
-        $datosAnteriores,
-        $datosNuevos,
-        $ip,
-        $descripcion,
-    ]);
+    $stmt->execute([Session::get('usuario_id'), $accion, $registroId, $datosAnteriores, $datosNuevos, $ip, $descripcion]);
 }
 
-function comprimirImagen(string $origen, string $destino, int $calidad = 70): bool
-{
-    $info = getimagesize($origen);
-    if ($info === false) {
-        return false;
-    }
-    switch ($info[2]) {
-        case IMAGETYPE_JPEG:
-            $img = imagecreatefromjpeg($origen);
-            $result = imagejpeg($img, $destino, $calidad);
-            break;
-        case IMAGETYPE_PNG:
-            $img = imagecreatefrompng($origen);
-            $result = imagepng($img, $destino, 6);
-            break;
-        default:
-            return false;
-    }
-    if (isset($img) && is_resource($img)) {
-        imagedestroy($img);
-    }
-    return $result;
-}
+$error = '';
+$mensaje = '';
+$formData = [
+    'id' => '', 'equipo_id' => '', 'tipo_falla_id' => '', 'prioridad_id' => '',
+    'zona_id' => '', 'descripcion_falla' => '', 'acciones_tomadas' => '',
+    'causa_raiz' => '', 'repuestos_utilizados' => '', 'supervisor_asigno_id' => '',
+    'mantenedor_id' => '', 'checklist_id' => '',
+];
 
 // --- Save / Update ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_correctiva'])) {
@@ -98,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_correctiva'])) {
             'equipo_id' => (int) ($_POST['equipo_id'] ?? 0),
             'tipo_falla_id' => (int) ($_POST['tipo_falla_id'] ?? 0),
             'prioridad_id' => (int) ($_POST['prioridad_id'] ?? 0),
-            'zona_id' => (int) ($_POST['zona_id'] ?? 0),
+            'zona_id' => (int) ($_POST['zona_id'] ?? 0) ?: null,
             'descripcion_falla' => trim($_POST['descripcion_falla'] ?? ''),
             'acciones_tomadas' => trim($_POST['acciones_tomadas'] ?? ''),
             'causa_raiz' => trim($_POST['causa_raiz'] ?? ''),
@@ -111,81 +89,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_correctiva'])) {
             $error = 'Complete los campos obligatorios: equipo, tipo de falla, prioridad y descripción.';
         }
 
-        if ($formData['zona_id'] === 0) {
-            $formData['zona_id'] = null;
-        }
-
         if (!$error) {
-            $usuarioId = (int) $_SESSION['usuario_id'];
+            $usuarioId = (int) Session::get('usuario_id');
             if ($formData['id']) {
-                $stmt = $pdo->prepare('SELECT * FROM ordenes_correctivas WHERE id = ? LIMIT 1');
-                $stmt->execute([(int) $formData['id']]);
-                $old = $stmt->fetch(PDO::FETCH_ASSOC);
+                $old = OrdenCorrectiva::find((int) $formData['id']);
                 if (!$old) {
                     $error = 'La orden no existe.';
                 } else {
-                    $stmt = $pdo->prepare(
-                        'UPDATE ordenes_correctivas SET equipo_id = ?, tipo_falla_id = ?, prioridad_id = ?, zona_id = ?,
-                         descripcion_falla = ?, acciones_tomadas = ?, causa_raiz = ?, repuestos_utilizados = ?,
-                         supervisor_asigno_id = ?, mantenedor_id = ?, actualizado_en = NOW()
-                         WHERE id = ?'
-                    );
-                    $stmt->execute([
-                        $formData['equipo_id'],
-                        $formData['tipo_falla_id'],
-                        $formData['prioridad_id'],
-                        $formData['zona_id'],
-                        $formData['descripcion_falla'],
-                        $formData['acciones_tomadas'],
-                        $formData['causa_raiz'],
-                        $formData['repuestos_utilizados'],
-                        $formData['supervisor_asigno_id'],
-                        $formData['mantenedor_id'],
-                        (int) $formData['id'],
+                    OrdenCorrectiva::update((int) $formData['id'], [
+                        'equipo_id' => $formData['equipo_id'],
+                        'tipo_falla_id' => $formData['tipo_falla_id'],
+                        'prioridad_id' => $formData['prioridad_id'],
+                        'zona_id' => $formData['zona_id'],
+                        'descripcion_falla' => $formData['descripcion_falla'],
+                        'acciones_tomadas' => $formData['acciones_tomadas'],
+                        'causa_raiz' => $formData['causa_raiz'],
+                        'repuestos_utilizados' => $formData['repuestos_utilizados'],
+                        'supervisor_asigno_id' => $formData['supervisor_asigno_id'],
+                        'mantenedor_id' => $formData['mantenedor_id'],
+                        'actualizado_en' => date('Y-m-d H:i:s'),
                     ]);
                     $mensaje = 'Orden correctiva actualizada correctamente.';
-                    $datosNuevos = json_encode($formData);
-                    $datosAnteriores = json_encode($old);
-                    registrarAuditoria($pdo, 'editar', (int) $formData['id'], $datosAnteriores, $datosNuevos, 'Orden correctiva editada');
+                    registrarAuditoria($pdo, 'editar', (int) $formData['id'], json_encode($old), json_encode($formData), 'Orden correctiva editada');
                     $formData['id'] = '';
                 }
             } else {
                 $codigoUnico = 'OC-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-                $stmt = $pdo->prepare(
-                    'INSERT INTO ordenes_correctivas (codigo_unico, equipo_id, tipo_falla_id, prioridad_id, zona_id,
-                     fecha_reporte, hora_reporte, reportado_por_usuario_id, descripcion_falla,
-                     acciones_tomadas, causa_raiz, repuestos_utilizados,
-                     supervisor_asigno_id, mantenedor_id, estado, creada_en, actualizado_en)
-                     VALUES (?, ?, ?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, ?, \'reportada\', NOW(), NOW())'
-                );
-                $stmt->execute([
-                    $codigoUnico,
-                    $formData['equipo_id'],
-                    $formData['tipo_falla_id'],
-                    $formData['prioridad_id'],
-                    $formData['zona_id'],
-                    $usuarioId,
-                    $formData['descripcion_falla'],
-                    $formData['acciones_tomadas'],
-                    $formData['causa_raiz'],
-                    $formData['repuestos_utilizados'],
-                    $formData['supervisor_asigno_id'],
-                    $formData['mantenedor_id'],
+                $nuevoId = OrdenCorrectiva::insert([
+                    'codigo_unico' => $codigoUnico,
+                    'equipo_id' => $formData['equipo_id'],
+                    'tipo_falla_id' => $formData['tipo_falla_id'],
+                    'prioridad_id' => $formData['prioridad_id'],
+                    'zona_id' => $formData['zona_id'],
+                    'fecha_reporte' => date('Y-m-d'),
+                    'hora_reporte' => date('H:i:s'),
+                    'reportado_por_usuario_id' => $usuarioId,
+                    'descripcion_falla' => $formData['descripcion_falla'],
+                    'acciones_tomadas' => $formData['acciones_tomadas'],
+                    'causa_raiz' => $formData['causa_raiz'],
+                    'repuestos_utilizados' => $formData['repuestos_utilizados'],
+                    'supervisor_asigno_id' => $formData['supervisor_asigno_id'],
+                    'mantenedor_id' => $formData['mantenedor_id'],
+                    'estado' => 'reportada',
+                    'creada_en' => date('Y-m-d H:i:s'),
+                    'actualizado_en' => date('Y-m-d H:i:s'),
                 ]);
-                $nuevoId = (int) $pdo->lastInsertId();
                 $mensaje = 'Orden correctiva creada correctamente. Código: ' . $codigoUnico;
                 registrarAuditoria($pdo, 'crear', $nuevoId, null, json_encode($formData), 'Orden correctiva creada: ' . $codigoUnico);
 
                 if (!empty($_POST['checklist_id'])) {
                     $checklistId = (int) $_POST['checklist_id'];
-                    $itemsStmt = $pdo->prepare('SELECT id FROM checklist_items WHERE checklist_id = ? AND estado = \'activo\'');
-                    $itemsStmt->execute([$checklistId]);
-                    $items = $itemsStmt->fetchAll(PDO::FETCH_COLUMN);
-                    $insertItem = $pdo->prepare(
-                        'INSERT INTO ejecucion_checklist_items (orden_correctiva_id, checklist_item_id) VALUES (?, ?)'
-                    );
-                    foreach ($items as $itemId) {
-                        $insertItem->execute([$nuevoId, $itemId]);
+                    $items = \App\Models\ChecklistItem::findByChecklist($checklistId);
+                    foreach ($items as $item) {
+                        EjecucionChecklistItem::insert([
+                            'orden_correctiva_id' => $nuevoId,
+                            'checklist_item_id' => $item['id'],
+                        ]);
                     }
                     if (!empty($items)) {
                         $mensaje .= ' Checklist asociado.';
@@ -193,9 +152,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_correctiva'])) {
                 }
 
                 $formData = [
-                    'id' => '', 'equipo_id' => '', 'tipo_falla_id' => '', 'prioridad_id' => '', 'zona_id' => '',
-                    'descripcion_falla' => '', 'acciones_tomadas' => '', 'causa_raiz' => '', 'repuestos_utilizados' => '',
-                    'supervisor_asigno_id' => '', 'mantenedor_id' => '', 'checklist_id' => '',
+                    'id' => '', 'equipo_id' => '', 'tipo_falla_id' => '', 'prioridad_id' => '',
+                    'zona_id' => '', 'descripcion_falla' => '', 'acciones_tomadas' => '',
+                    'causa_raiz' => '', 'repuestos_utilizados' => '', 'supervisor_asigno_id' => '',
+                    'mantenedor_id' => '', 'checklist_id' => '',
                 ];
             }
         }
@@ -207,32 +167,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_estado'])) {
     if (!$puedeCambiarEstado) {
         $error = 'No tiene permisos para cambiar el estado.';
     } else {
-        $otId = (int) ($_POST['ot_id'] ?? 0);
-        $nuevoEstado = $_POST['nuevo_estado'] ?? '';
-        $stmt = $pdo->prepare('SELECT * FROM ordenes_correctivas WHERE id = ? LIMIT 1');
-        $stmt->execute([$otId]);
-        $orden = $stmt->fetch();
-        if (!$orden) {
-            $error = 'Orden no encontrada.';
-        } elseif (!isset($transiciones[$orden['estado']]) || !in_array($nuevoEstado, $transiciones[$orden['estado']], true)) {
-            $error = 'Transición de estado no permitida.';
+        $result = CorrectivaService::changeState(
+            (int) ($_POST['ot_id'] ?? 0),
+            $_POST['nuevo_estado'] ?? '',
+            trim($_POST['codigo_otp'] ?? '')
+        );
+        if ($result['ok']) {
+            $mensaje = $result['message'];
+            $otId = (int) ($_POST['ot_id'] ?? 0);
+            registrarAuditoria($pdo, 'cambiar_estado', $otId, null, json_encode(['estado' => $_POST['nuevo_estado']]), $result['message']);
         } else {
-            $extra = '';
-            $params = [$nuevoEstado, $otId];
-            if ($nuevoEstado === 'cerrada') {
-                $extra = ', cerrada_por_usuario_id = ?, fecha_cierre = NOW()';
-                array_unshift($params, $_SESSION['usuario_id']);
-            }
-            if ($nuevoEstado === 'en_progreso') {
-                $extra = ', fecha_inicio_reparacion = CURDATE(), hora_inicio_reparacion = CURTIME()';
-            }
-            if ($nuevoEstado === 'completada') {
-                $extra = ', fecha_fin_reparacion = CURDATE(), hora_fin_reparacion = CURTIME()';
-            }
-            $stmt = $pdo->prepare("UPDATE ordenes_correctivas SET estado = ? $extra WHERE id = ?");
-            $stmt->execute($nuevoEstado === 'cerrada' ? array_merge([$_SESSION['usuario_id']], [$nuevoEstado, $otId]) : [$nuevoEstado, $otId]);
-            $mensaje = 'Estado actualizado a: ' . $nuevoEstado;
-            registrarAuditoria($pdo, $nuevoEstado === 'cerrada' ? 'cerrar' : 'cambiar_estado', $otId, json_encode(['estado' => $orden['estado']]), json_encode(['estado' => $nuevoEstado]), 'Estado cambiado de ' . $orden['estado'] . ' a ' . $nuevoEstado);
+            $error = $result['error'];
         }
     }
 }
@@ -245,39 +190,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subir_foto'])) {
     } elseif ($otId <= 0) {
         $error = 'Orden inválida.';
     } else {
-        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM fotos_correctivas WHERE orden_correctiva_id = ?');
-        $countStmt->execute([$otId]);
-        $fotoCount = (int) $countStmt->fetchColumn();
-        if ($fotoCount >= 3) {
-            $error = 'Máximo 3 fotos por orden.';
-        } elseif (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
-            $error = 'Error al subir el archivo.';
+        $result = CorrectivaService::uploadPhoto($otId, $_FILES['foto'] ?? []);
+        if ($result['ok']) {
+            $mensaje = $result['message'];
+            registrarAuditoria($pdo, 'subir_foto', $otId, null, null, 'Foto subida');
         } else {
-            $archivo = $_FILES['foto'];
-            $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-            if (!in_array($ext, ['jpg', 'jpeg', 'png'], true)) {
-                $error = 'Solo se permiten archivos JPG y PNG.';
-            } else {
-                $uploadDir = __DIR__ . '/../uploads/correctivas/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                $nombreUnico = $otId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-                $rutaFinal = $uploadDir . $nombreUnico;
-                if (@copy($archivo['tmp_name'], $rutaFinal) && comprimirImagen($rutaFinal, $rutaFinal, 70)) {
-                    $tamanoKb = (int) (filesize($rutaFinal) / 1024);
-                    $stmt = $pdo->prepare(
-                        'INSERT INTO fotos_correctivas (orden_correctiva_id, ruta_archivo, nombre_original, tamano_kb, tipo, subida_por_usuario_id)
-                         VALUES (?, ?, ?, ?, \'durante\', ?)'
-                    );
-                    $stmt->execute([$otId, 'uploads/correctivas/' . $nombreUnico, $archivo['name'], $tamanoKb, $_SESSION['usuario_id']]);
-                    $mensaje = 'Foto subida correctamente.';
-                    registrarAuditoria($pdo, 'subir_foto', $otId, null, null, 'Foto subida: ' . $archivo['name']);
-                } else {
-                    $error = 'Error al procesar la imagen.';
-                    @unlink($rutaFinal);
-                }
-            }
+            $error = $result['error'];
         }
     }
 }
@@ -285,31 +203,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subir_foto'])) {
 // --- Delete photo ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_foto']) && $puedeEliminar) {
     $fotoId = (int) ($_POST['foto_id'] ?? 0);
-    $stmt = $pdo->prepare('SELECT ruta_archivo, orden_correctiva_id FROM fotos_correctivas WHERE id = ? LIMIT 1');
-    $stmt->execute([$fotoId]);
-    $foto = $stmt->fetch();
+    $foto = FotoCorrectiva::find($fotoId);
     if ($foto) {
-        $rutaCompleta = __DIR__ . '/../' . $foto['ruta_archivo'];
-        if (file_exists($rutaCompleta)) {
-            @unlink($rutaCompleta);
+        $result = CorrectivaService::deletePhoto($fotoId, (int) $foto['orden_correctiva_id']);
+        if ($result['ok']) {
+            $mensaje = $result['message'];
+            registrarAuditoria($pdo, 'eliminar_foto', (int) $foto['orden_correctiva_id'], null, null, 'Foto eliminada (ID: ' . $fotoId . ')');
         }
-        $stmt = $pdo->prepare('DELETE FROM fotos_correctivas WHERE id = ?');
-        $stmt->execute([$fotoId]);
-        $mensaje = 'Foto eliminada.';
-        registrarAuditoria($pdo, 'eliminar_foto', (int) $foto['orden_correctiva_id'], null, null, 'Foto eliminada (ID: ' . $fotoId . ')');
     }
 }
 
 // --- Delete order ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_correctiva']) && $puedeEliminar) {
     $otId = (int) ($_POST['eliminar_correctiva'] ?? 0);
-    $stmt = $pdo->prepare('SELECT codigo_unico FROM ordenes_correctivas WHERE id = ? LIMIT 1');
-    $stmt->execute([$otId]);
-    $orden = $stmt->fetch();
+    $orden = OrdenCorrectiva::find($otId);
     if ($orden) {
-        $pdo->prepare('DELETE FROM fotos_correctivas WHERE orden_correctiva_id = ?')->execute([$otId]);
-        $pdo->prepare('DELETE FROM ejecucion_checklist_items WHERE orden_correctiva_id = ?')->execute([$otId]);
-        $pdo->prepare('DELETE FROM ordenes_correctivas WHERE id = ?')->execute([$otId]);
+        FotoCorrectiva::deleteByCorrectiva($otId);
+        \App\Models\EjecucionChecklistItem::execute('DELETE FROM ejecucion_checklist_items WHERE orden_correctiva_id = ?', [$otId]);
+        OrdenCorrectiva::delete($otId);
         $mensaje = 'Orden correctiva eliminada: ' . $orden['codigo_unico'];
         registrarAuditoria($pdo, 'eliminar', $otId, null, null, 'Orden eliminada: ' . $orden['codigo_unico']);
     }
@@ -317,10 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_correctiva']
 
 // --- Edit pre-fill ---
 if (isset($_GET['edit']) && is_numeric($_GET['edit']) && $puedeEditar) {
-    $otId = (int) $_GET['edit'];
-    $stmt = $pdo->prepare('SELECT * FROM ordenes_correctivas WHERE id = ? LIMIT 1');
-    $stmt->execute([$otId]);
-    $orden = $stmt->fetch();
+    $orden = OrdenCorrectiva::find((int) $_GET['edit']);
     if ($orden) {
         $formData = [
             'id' => $orden['id'],
@@ -345,7 +253,7 @@ $auditorias = [];
 $checklistEjecuciones = [];
 if (isset($_GET['view']) && is_numeric($_GET['view'])) {
     $viewId = (int) $_GET['view'];
-    $stmt = $pdo->prepare(
+    $ordenDetalle = OrdenCorrectiva::rawOne(
         'SELECT o.*, e.nombre AS equipo_nombre, e.numero_activo_fijo, tf.nombre AS tipo_falla_nombre, p.nombre AS prioridad_nombre, p.color_alert,
                 z.nombre AS zona_nombre, r.nombre_completo AS reportado_por_nombre,
                 s.nombre_completo AS supervisor_nombre, m.nombre_completo AS mantenedor_nombre
@@ -357,34 +265,27 @@ if (isset($_GET['view']) && is_numeric($_GET['view'])) {
          LEFT JOIN usuarios r ON r.id = o.reportado_por_usuario_id
          LEFT JOIN usuarios s ON s.id = o.supervisor_asigno_id
          LEFT JOIN usuarios m ON m.id = o.mantenedor_id
-         WHERE o.id = ? LIMIT 1'
+         WHERE o.id = ? LIMIT 1',
+        [$viewId]
     );
-    $stmt->execute([$viewId]);
-    $ordenDetalle = $stmt->fetch();
     if ($ordenDetalle) {
-        $fotoStmt = $pdo->prepare('SELECT * FROM fotos_correctivas WHERE orden_correctiva_id = ? ORDER BY fecha_subida ASC');
-        $fotoStmt->execute([$viewId]);
-        $fotos = $fotoStmt->fetchAll();
-
-        $audStmt = $pdo->prepare(
+        $fotos = FotoCorrectiva::findByCorrectiva($viewId);
+        $auditorias = LogAuditoria::raw(
             'SELECT l.*, u.nombre_completo AS usuario_nombre
              FROM logs_auditoria l
              LEFT JOIN usuarios u ON u.id = l.usuario_id
              WHERE l.tabla_afectada = \'ordenes_correctivas\' AND l.registro_afectado_id = ?
-             ORDER BY l.fecha_hora DESC'
+             ORDER BY l.fecha_hora DESC',
+            [$viewId]
         );
-        $audStmt->execute([$viewId]);
-        $auditorias = $audStmt->fetchAll();
-
-        $checkStmt = $pdo->prepare(
+        $checklistEjecuciones = EjecucionChecklistItem::raw(
             'SELECT eci.*, ci.descripcion AS item_descripcion, ci.es_requerido
              FROM ejecucion_checklist_items eci
              LEFT JOIN checklist_items ci ON ci.id = eci.checklist_item_id
              WHERE eci.orden_correctiva_id = ?
-             ORDER BY ci.orden ASC, ci.id ASC'
+             ORDER BY ci.orden ASC, ci.id ASC',
+            [$viewId]
         );
-        $checkStmt->execute([$viewId]);
-        $checklistEjecuciones = $checkStmt->fetchAll();
     }
 }
 
@@ -393,18 +294,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_checklist_item
     $itemId = (int) ($_POST['item_id'] ?? 0);
     $viewId = (int) ($_POST['view_id'] ?? 0);
     if ($puedeEditar && $itemId > 0) {
-        $stmt = $pdo->prepare('SELECT marcado_como_hecho FROM ejecucion_checklist_items WHERE id = ? AND orden_correctiva_id = ? LIMIT 1');
-        $stmt->execute([$itemId, $viewId]);
-        $item = $stmt->fetch();
-        if ($item) {
+        $item = EjecucionChecklistItem::find($itemId);
+        if ($item && (int) $item['orden_correctiva_id'] === $viewId) {
             $nuevoValor = $item['marcado_como_hecho'] ? 0 : 1;
-            $fechaMarcado = $nuevoValor ? 'NOW()' : 'NULL';
-            $pdo->prepare("UPDATE ejecucion_checklist_items SET marcado_como_hecho = ?, fecha_marcado = $fechaMarcado WHERE id = ?")->execute([$nuevoValor, $itemId]);
+            $fechaMarcado = $nuevoValor ? date('Y-m-d H:i:s') : null;
+            EjecucionChecklistItem::update($itemId, [
+                'marcado_como_hecho' => $nuevoValor,
+                'fecha_marcado' => $fechaMarcado,
+            ]);
             $mensaje = 'Item actualizado.';
         }
     }
     if ($viewId > 0) {
         $_GET['view'] = $viewId;
+    }
+    if ($viewId > 0 && $ordenDetalle === null) {
+        $ordenDetalle = OrdenCorrectiva::rawOne(
+            'SELECT o.*, e.nombre AS equipo_nombre, e.numero_activo_fijo
+             FROM ordenes_correctivas o
+             LEFT JOIN equipos e ON e.id = o.equipo_id
+             WHERE o.id = ? LIMIT 1',
+            [$viewId]
+        );
     }
 }
 
@@ -412,33 +323,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_checklist_item
 $filterTipoFalla = (int) ($_GET['filter_tipo_falla'] ?? 0);
 $filterPrioridad = (int) ($_GET['filter_prioridad'] ?? 0);
 $filterZona = (int) ($_GET['filter_zona'] ?? 0);
-$filterEstado = in_array($_GET['filter_estado'] ?? '', ['reportada', 'en_progreso', 'completada', 'cerrada', 'cancelada', 'todos'], true) ? $_GET['filter_estado'] : 'todos';
+$filterEstado = in_array($_GET['filter_estado'] ?? '', array_merge($transiciones, ['todos']), true) ? $_GET['filter_estado'] : 'todos';
 $filterEquipo = (int) ($_GET['filter_equipo'] ?? 0);
 
 $where = ['1 = 1'];
 $params = [];
-if ($filterTipoFalla > 0) {
-    $where[] = 'o.tipo_falla_id = ?';
-    $params[] = $filterTipoFalla;
-}
-if ($filterPrioridad > 0) {
-    $where[] = 'o.prioridad_id = ?';
-    $params[] = $filterPrioridad;
-}
-if ($filterZona > 0) {
-    $where[] = 'o.zona_id = ?';
-    $params[] = $filterZona;
-}
-if ($filterEstado !== 'todos') {
-    $where[] = 'o.estado = ?';
-    $params[] = $filterEstado;
-}
-if ($filterEquipo > 0) {
-    $where[] = 'o.equipo_id = ?';
-    $params[] = $filterEquipo;
-}
+if ($filterTipoFalla > 0) { $where[] = 'o.tipo_falla_id = ?'; $params[] = $filterTipoFalla; }
+if ($filterPrioridad > 0) { $where[] = 'o.prioridad_id = ?'; $params[] = $filterPrioridad; }
+if ($filterZona > 0) { $where[] = 'o.zona_id = ?'; $params[] = $filterZona; }
+if ($filterEstado !== 'todos') { $where[] = 'o.estado = ?'; $params[] = $filterEstado; }
+if ($filterEquipo > 0) { $where[] = 'o.equipo_id = ?'; $params[] = $filterEquipo; }
 
-$query = sprintf(
+$ordenes = OrdenCorrectiva::raw(
     'SELECT o.id, o.codigo_unico, o.fecha_reporte, o.hora_reporte, o.estado, o.descripcion_falla,
             e.nombre AS equipo_nombre, tf.nombre AS tipo_falla, p.nombre AS prioridad, p.color_alert AS prioridad_color,
             z.nombre AS zona, u.nombre_completo AS reportado_por
@@ -448,13 +344,10 @@ $query = sprintf(
      LEFT JOIN prioridades_falla p ON p.id = o.prioridad_id
      LEFT JOIN zonas z ON z.id = o.zona_id
      LEFT JOIN usuarios u ON u.id = o.reportado_por_usuario_id
-     WHERE %s
+     WHERE ' . implode(' AND ', $where) . '
      ORDER BY o.fecha_reporte DESC, o.hora_reporte DESC',
-    implode(' AND ', $where)
+    $params
 );
-$stmt = $pdo->prepare($query);
-$stmt->execute($params);
-$ordenes = $stmt->fetchAll();
 
 $pageTitle = 'Órdenes correctivas';
 $pageSlug = 'correctivas';
@@ -475,7 +368,7 @@ require __DIR__ . '/includes/layout.php';
                 <div class="page-card">
                     <div class="page-header" style="margin-bottom:1rem;">
                         <h2>Detalle: <?= htmlspecialchars($ordenDetalle['codigo_unico']) ?></h2>
-                        <a href="<?= BASE_PATH ?>/public/correctivas.php" class="btn btn-outline">&larr; Volver</a>
+                        <a href="<?= App::BASE_PATH ?>/public/correctivas.php" class="btn btn-outline">&larr; Volver</a>
                     </div>
                     <div class="form-grid" style="grid-template-columns:1fr 1fr;">
                         <div><strong>Equipo:</strong> <?= htmlspecialchars($ordenDetalle['equipo_nombre'] ?? '') ?> (<?= htmlspecialchars($ordenDetalle['numero_activo_fijo'] ?? '') ?>)</div>
@@ -520,7 +413,7 @@ require __DIR__ . '/includes/layout.php';
                     </div>
                     <?php endif; ?>
 
-                    <?php if (isset($transiciones[$ordenDetalle['estado']]) && !empty($transiciones[$ordenDetalle['estado']]) && $puedeCambiarEstado): ?>
+                    <?php if (isset($transicionesMap[$ordenDetalle['estado']]) && !empty($transicionesMap[$ordenDetalle['estado']]) && $puedeCambiarEstado): ?>
                     <div style="margin-top:1.5rem; border-top:1px solid var(--border); padding-top:1rem;">
                         <h3>Cambiar estado</h3>
                         <form method="post" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
@@ -528,7 +421,7 @@ require __DIR__ . '/includes/layout.php';
                             <input type="hidden" name="ot_id" value="<?= $ordenDetalle['id'] ?>">
                             <select name="nuevo_estado" required>
                                 <option value="">Seleccione</option>
-                                <?php foreach ($transiciones[$ordenDetalle['estado']] as $estado): ?>
+                                <?php foreach ($transicionesMap[$ordenDetalle['estado']] as $estado): ?>
                                     <option value="<?= htmlspecialchars($estado) ?>"><?= htmlspecialchars(ucfirst($estado)) ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -557,11 +450,11 @@ require __DIR__ . '/includes/layout.php';
                     <div style="display:flex; gap:1rem; flex-wrap:wrap;">
                         <?php foreach ($fotos as $foto): ?>
                             <div style="position:relative; border:1px solid var(--border); border-radius:8px; overflow:hidden; max-width:200px;">
-                                <a href="<?= BASE_PATH ?>/<?= htmlspecialchars($foto['ruta_archivo']) ?>" target="_blank">
-                                    <img src="<?= BASE_PATH ?>/<?= htmlspecialchars($foto['ruta_archivo']) ?>" alt="Foto" style="width:100%; display:block;">
+                                <a href="<?= App::BASE_PATH ?>/public/assets/uploads/fotos-fallas/<?= htmlspecialchars($foto['ruta_archivo']) ?>" target="_blank">
+                                    <img src="<?= App::BASE_PATH ?>/public/assets/uploads/fotos-fallas/<?= htmlspecialchars($foto['ruta_archivo']) ?>" alt="Foto" style="width:100%; display:block;">
                                 </a>
                                 <div style="padding:4px 8px; font-size:0.85em;">
-                                    <?= htmlspecialchars($foto['nombre_original']) ?> (<?= $foto['tamano_kb'] ?> KB)
+                                    <?= htmlspecialchars($foto['nombre_original'] ?? '') ?> (<?= $foto['tamano_kb'] ?> KB)
                                     <?php if ($puedeEliminar): ?>
                                     <form method="post" style="display:inline;" onsubmit="return confirm('¿Eliminar esta foto?')">
                                         <input type="hidden" name="eliminar_foto" value="1">
@@ -582,15 +475,10 @@ require __DIR__ . '/includes/layout.php';
                     <h3>Checklist de ejecución</h3>
                     <?php if (!empty($checklistEjecuciones)): ?>
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Requerido</th>
-                                <th>Estado</th>
-                                <th>Fecha</th>
-                                <?php if ($puedeEditar): ?><th>Acción</th><?php endif; ?>
-                            </tr>
-                        </thead>
+                        <thead><tr>
+                            <th>Item</th><th>Requerido</th><th>Estado</th><th>Fecha</th>
+                            <?php if ($puedeEditar): ?><th>Acción</th><?php endif; ?>
+                        </tr></thead>
                         <tbody>
                             <?php foreach ($checklistEjecuciones as $item): ?>
                             <tr>
@@ -621,14 +509,7 @@ require __DIR__ . '/includes/layout.php';
                     <h3>Historial de auditoría</h3>
                     <?php if (!empty($auditorias)): ?>
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Usuario</th>
-                                <th>Acción</th>
-                                <th>Descripción</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Descripción</th></tr></thead>
                         <tbody>
                             <?php foreach ($auditorias as $log): ?>
                             <tr>
@@ -689,7 +570,7 @@ require __DIR__ . '/includes/layout.php';
                             <label for="filter_equipo">Equipo</label>
                             <select id="filter_equipo" name="filter_equipo">
                                 <option value="0">Todos</option>
-                                <?php $equiposList = $pdo->query("SELECT id, nombre FROM equipos WHERE estado = 'activo' ORDER BY nombre")->fetchAll(); ?>
+                                <?php $equiposList = Equipo::allActive(); ?>
                                 <?php foreach ($equiposList as $eq): ?>
                                     <option value="<?= $eq['id'] ?>" <?= $filterEquipo === (int) $eq['id'] ? 'selected' : '' ?>><?= htmlspecialchars($eq['nombre']) ?></option>
                                 <?php endforeach; ?>
@@ -705,23 +586,12 @@ require __DIR__ . '/includes/layout.php';
                     <?php endif; ?>
 
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Equipo</th>
-                                <th>Tipo de falla</th>
-                                <th>Prioridad</th>
-                                <th>Zona</th>
-                                <th>Fecha</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
+                        <thead><tr>
+                            <th>Código</th><th>Equipo</th><th>Tipo de falla</th><th>Prioridad</th><th>Zona</th><th>Fecha</th><th>Estado</th><th>Acciones</th>
+                        </tr></thead>
                         <tbody>
                             <?php if (empty($ordenes)): ?>
-                                <tr>
-                                    <td colspan="8">No se encontraron órdenes correctivas con los filtros seleccionados.</td>
-                                </tr>
+                                <tr><td colspan="8">No se encontraron órdenes correctivas con los filtros seleccionados.</td></tr>
                             <?php endif; ?>
                             <?php foreach ($ordenes as $orden): ?>
                                 <tr>
@@ -733,14 +603,14 @@ require __DIR__ . '/includes/layout.php';
                                     <td><?= htmlspecialchars($orden['fecha_reporte']) ?><br><small><?= htmlspecialchars($orden['hora_reporte']) ?></small></td>
                                     <td><span class="tag tag-<?= htmlspecialchars($orden['estado']) ?>"><?= htmlspecialchars(ucfirst($orden['estado'])) ?></span></td>
                                     <td>
-                                        <a href="<?= BASE_PATH ?>/public/correctivas.php?view=<?= $orden['id'] ?>" class="btn btn-outline small-action">Ver</a>
+                                        <a href="<?= App::BASE_PATH ?>/public/correctivas.php?view=<?= $orden['id'] ?>" class="btn btn-outline small-action">Ver</a>
                                         <?php if ($puedeEditar && $orden['estado'] !== 'cerrada'): ?>
-                                            <a href="<?= BASE_PATH ?>/public/correctivas.php?edit=<?= $orden['id'] ?>" class="btn btn-outline small-action">Editar</a>
+                                            <a href="<?= App::BASE_PATH ?>/public/correctivas.php?edit=<?= $orden['id'] ?>" class="btn btn-outline small-action">Editar</a>
                                         <?php endif; ?>
                                         <?php if ($puedeEliminar): ?>
                                             <form method="post" style="display:inline-block;" onsubmit="return confirm('¿Eliminar permanentemente la orden?');">
                                                 <input type="hidden" name="eliminar_correctiva" value="<?= $orden['id'] ?>">
-                                                <button type="submit" class="btn btn-outline small-action" style="color:var(--danger);">Eliminar</button>
+                                                <button type="submit" class="btn btn-outline small-action">Eliminar</button>
                                             </form>
                                         <?php endif; ?>
                                     </td>
@@ -760,13 +630,12 @@ require __DIR__ . '/includes/layout.php';
                             <label for="equipo_id">Equipo</label>
                             <select id="equipo_id" name="equipo_id" required>
                                 <option value="">Seleccione</option>
-                                <?php $equiposForm = $pdo->query("SELECT e.id, e.nombre, e.numero_activo_fijo FROM equipos e WHERE e.estado = 'activo' ORDER BY e.nombre")->fetchAll(); ?>
+                                <?php $equiposForm = Equipo::allActive(); ?>
                                 <?php foreach ($equiposForm as $eq): ?>
                                     <option value="<?= $eq['id'] ?>" <?= $formData['equipo_id'] == $eq['id'] ? 'selected' : '' ?>><?= htmlspecialchars($eq['nombre']) ?> (<?= htmlspecialchars($eq['numero_activo_fijo'] ?? '') ?>)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label for="tipo_falla_id">Tipo de falla</label>
                             <select id="tipo_falla_id" name="tipo_falla_id" required>
@@ -776,7 +645,6 @@ require __DIR__ . '/includes/layout.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label for="prioridad_id">Prioridad</label>
                             <select id="prioridad_id" name="prioridad_id" required>
@@ -786,7 +654,6 @@ require __DIR__ . '/includes/layout.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label for="zona_id">Zona</label>
                             <select id="zona_id" name="zona_id">
@@ -796,7 +663,6 @@ require __DIR__ . '/includes/layout.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label for="supervisor_asigno_id">Supervisor asignado</label>
                             <select id="supervisor_asigno_id" name="supervisor_asigno_id">
@@ -806,7 +672,6 @@ require __DIR__ . '/includes/layout.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label for="mantenedor_id">Mantenedor asignado</label>
                             <select id="mantenedor_id" name="mantenedor_id">
@@ -816,7 +681,6 @@ require __DIR__ . '/includes/layout.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label for="checklist_id">Checklist asociado (solo al crear)</label>
                             <select id="checklist_id" name="checklist_id" <?= $formData['id'] ? 'disabled' : '' ?>>
@@ -829,27 +693,22 @@ require __DIR__ . '/includes/layout.php';
                                 <input type="hidden" name="checklist_id" value="">
                             <?php endif; ?>
                         </div>
-
                         <div class="form-group" style="grid-column:1 / -1;">
                             <label for="descripcion_falla">Descripción de la falla</label>
                             <textarea id="descripcion_falla" name="descripcion_falla" rows="4" required><?= htmlspecialchars($formData['descripcion_falla']) ?></textarea>
                         </div>
-
                         <div class="form-group" style="grid-column:1 / -1;">
                             <label for="acciones_tomadas">Acciones tomadas</label>
                             <textarea id="acciones_tomadas" name="acciones_tomadas" rows="3"><?= htmlspecialchars($formData['acciones_tomadas']) ?></textarea>
                         </div>
-
                         <div class="form-group" style="grid-column:1 / -1;">
                             <label for="causa_raiz">Causa raíz</label>
                             <textarea id="causa_raiz" name="causa_raiz" rows="2"><?= htmlspecialchars($formData['causa_raiz']) ?></textarea>
                         </div>
-
                         <div class="form-group" style="grid-column:1 / -1;">
                             <label for="repuestos_utilizados">Repuestos utilizados</label>
                             <textarea id="repuestos_utilizados" name="repuestos_utilizados" rows="2"><?= htmlspecialchars($formData['repuestos_utilizados']) ?></textarea>
                         </div>
-
                         <div class="form-group" style="grid-column:1 / -1; text-align:right;">
                             <button type="submit" class="btn btn-primary"><?= $formData['id'] ? 'Guardar cambios' : 'Crear orden correctiva' ?></button>
                         </div>
