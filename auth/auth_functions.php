@@ -3,9 +3,8 @@
  * Funciones de autenticación y sesión.
  */
 
-require_once dirname(__DIR__) . '/config/db.php';
+require_once dirname(__DIR__) . '/config/database.php';
 
-const SESION_HORAS = 8;
 const BASE_PATH = '/sistema_pdvsa';
 const ROL_ADMINISTRADOR = 'Administrador';
 const OTP_TOKEN_MINUTES = 5;
@@ -15,7 +14,7 @@ function iniciarSesionPhp(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
         session_set_cookie_params([
-            'lifetime' => SESION_HORAS * 3600,
+            'lifetime' => SESION_MAX_SEGUNDOS,
             'path'     => BASE_PATH . '/',
             'httponly' => true,
             'samesite' => 'Lax',
@@ -55,9 +54,9 @@ function obtenerConfiguracionSistema(string $clave, $default = null)
 function obtenerSegundosSesionPorRol(string $rolNombre): int
 {
     $valores = [
-        'Administrador' => obtenerConfiguracionSistema('sesion_minutos_admin', '10'),
-        'Supervisor' => obtenerConfiguracionSistema('sesion_minutos_supervisor', '20'),
-        'Otros' => obtenerConfiguracionSistema('sesion_minutos_otros', '35'),
+        'Administrador' => obtenerConfiguracionSistema('sesion_minutos_admin', (string) SESSION_TIMEOUT_ADMIN),
+        'Supervisor' => obtenerConfiguracionSistema('sesion_minutos_supervisor', (string) SESSION_TIMEOUT_SUPERVISOR),
+        'Otros' => obtenerConfiguracionSistema('sesion_minutos_otros', (string) SESSION_TIMEOUT_OTHER),
     ];
 
     $minutos = $valores[$rolNombre] ?? $valores['Otros'];
