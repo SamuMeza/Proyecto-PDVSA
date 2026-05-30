@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Esquema de Tablas Base
-El sistema SHALL inicializar la base de datos con todas las tablas maestras, transaccionales y de configuración, de acuerdo con los modelos definidos en la carpeta `tablas/`.
+El sistema SHALL inicializar la base de datos con todas las tablas maestras, transaccionales y de configuración, de acuerdo con los modelos definidos en la carpeta `docs/tablas/`.
 
 #### Scenario: Creación inicial del esquema
 - **WHEN** un administrador ejecuta los scripts de creación (`schema_mysql.sql` o `schema_postgresql.sql`) en una base de datos vacía
