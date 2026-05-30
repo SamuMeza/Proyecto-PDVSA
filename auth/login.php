@@ -15,8 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $clave   = $_POST['contrasena'] ?? '';
     $resultado = intentarLogin($usuario, $clave);
 
-    if ($resultado['ok']) {
-        header('Location: ' . BASE_PATH . '/public/index.php');
+    if ($resultado['ok'] && !empty($resultado['needs_otp'])) {
+        header('Location: ' . BASE_PATH . '/auth/otp_verify.php');
         exit;
     }
     $error = $resultado['error'];

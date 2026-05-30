@@ -13,6 +13,7 @@ $navItems = [
     ['slug' => 'index',       'label' => 'Inicio',           'url' => BASE_PATH . '/public/index.php',       'icon' => '⌂'],
     ['slug' => 'equipos',     'label' => 'Equipos',          'url' => BASE_PATH . '/public/equipos.php',     'icon' => '⚙'],
     ['slug' => 'preventivas', 'label' => 'Órdenes preventivas', 'url' => BASE_PATH . '/public/preventivas.php', 'icon' => '📅'],
+    ['slug' => 'calendario', 'label' => 'Calendario', 'url' => BASE_PATH . '/public/calendario.php', 'icon' => '🗓'],
     ['slug' => 'correctivas', 'label' => 'Órdenes correctivas', 'url' => BASE_PATH . '/public/correctivas.php', 'icon' => '🔧'],
     ['slug' => 'reportes',    'label' => 'Reportes',         'url' => BASE_PATH . '/public/reportes.php',    'icon' => '📊'],
     ['slug' => 'usuarios',    'label' => 'Usuarios',         'url' => BASE_PATH . '/public/usuarios.php',    'icon' => '👤'],
@@ -26,6 +27,8 @@ if (esAdministrador()) {
         'icon'  => '➕',
     ];
 }
+
+$logoPath = obtenerRutaLogoPdvsa();
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="light">
@@ -39,7 +42,12 @@ if (esAdministrador()) {
     <div class="app-layout">
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-brand">PDV<span>SA</span></div>
+                <div class="sidebar-brand">
+                    <?php if ($logoPath): ?>
+                        <img src="<?= htmlspecialchars($logoPath) ?>" alt="PDVSA" class="sidebar-logo">
+                    <?php endif; ?>
+                    PDV<span>SA</span>
+                </div>
                 <button type="button" id="sidebar-toggle" class="sidebar-toggle" aria-label="Ocultar menú">‹</button>
             </div>
             <nav class="sidebar-nav">
