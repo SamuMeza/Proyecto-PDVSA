@@ -1,0 +1,51 @@
+{
+  "$schema": "https://opencode.ai/schemas/opencode.json",
+  "name": "Proyecto-PDVSA",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de mantenimiento para PDVSA",
+  "agents": {},
+  "subagents": {},
+  "skills": {},
+  "plugins": {},
+  "permissions": {
+    "file": {
+      "allowed": [
+        "**/*"
+      ],
+      "denied": [
+        "**/.env",
+        "**/*.key",
+        "**/*.pem",
+        "**/secrets/**"
+      ]
+    },
+    "shell": {
+      "allowed": [
+        "git*",
+        "ls*",
+        "cat*",
+        "mkdir*",
+        "rm*",
+        "mv*",
+        "cp*",
+        "php*",
+        "composer*",
+        "npm*",
+        "node*",
+        "find*",
+        "grep*",
+        "echo*",
+        "pwd",
+        "mkdir",
+        "touch",
+        "chmod*"
+      ],
+      "denied": [
+        "rm -rf /",
+        "dd if=",
+        "> /dev/sda",
+        "mkfs*"
+      ]
+    }
+  }
+}
