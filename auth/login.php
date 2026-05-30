@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar sesión — Sistema PDVSA</title>
-    <link rel="stylesheet" href="<?= BASE_PATH ?>/css/styles.css">
+    <link rel="stylesheet" href="<?= BASE_PATH ?>/public/assets/css/main.css">
 </head>
 <body class="auth-page">
     <div class="auth-card">
@@ -55,6 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <span class="theme-icon-dark">☽</span>
         </button>
     </div>
-    <script src="<?= BASE_PATH ?>/css/theme.js"></script>
+    <script src="<?= BASE_PATH ?>/public/assets/js/theme.js"></script>
 </body>
 </html>
