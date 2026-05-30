@@ -247,6 +247,8 @@ CREATE TABLE IF NOT EXISTS ordenes_preventivas (
     equipo_id INTEGER NOT NULL REFERENCES equipos(id),
     nivel_mantenimiento_id INTEGER NOT NULL REFERENCES niveles_mantenimiento(id),
     fecha_planificada DATE NOT NULL,
+    hora_inicio TIME NULL,
+    hora_fin TIME NULL,
     fecha_asignacion DATE NULL,
     fecha_inicio_ejecucion TIMESTAMP NULL,
     fecha_cierre_ejecucion TIMESTAMP NULL,
@@ -259,6 +261,8 @@ CREATE TABLE IF NOT EXISTS ordenes_preventivas (
     observaciones_mantenedor TEXT NULL,
     observaciones_supervisor TEXT NULL,
     motivo_suspension TEXT NULL,
+    descripcion TEXT NULL,
+    codigo_otp_validacion VARCHAR(6) NULL,
     generada_automaticamente BOOLEAN DEFAULT TRUE,
     creada_en TIMESTAMP DEFAULT NOW(),
     actualizada_en TIMESTAMP DEFAULT NOW()
@@ -288,7 +292,8 @@ CREATE INDEX IF NOT EXISTS idx_ejecuciones_mantenedor ON ejecuciones_preventivas
 -- Tabla: ejecucion_checklist_items
 CREATE TABLE IF NOT EXISTS ejecucion_checklist_items (
     id SERIAL PRIMARY KEY,
-    ejecucion_preventiva_id INTEGER NOT NULL REFERENCES ejecuciones_preventivas(id),
+    ejecucion_preventiva_id INTEGER NULL REFERENCES ejecuciones_preventivas(id) ON DELETE SET NULL,
+    orden_correctiva_id INTEGER NULL REFERENCES ordenes_correctivas(id) ON DELETE SET NULL,
     checklist_item_id INTEGER NOT NULL REFERENCES checklist_items(id),
     marcado_como_hecho BOOLEAN DEFAULT FALSE,
     observacion_item TEXT NULL,
@@ -298,6 +303,7 @@ CREATE TABLE IF NOT EXISTS ejecucion_checklist_items (
 );
 
 CREATE INDEX IF NOT EXISTS idx_ejecucion_items_ejecucion ON ejecucion_checklist_items(ejecucion_preventiva_id);
+CREATE INDEX IF NOT EXISTS idx_ejecucion_items_otc ON ejecucion_checklist_items(orden_correctiva_id);
 CREATE INDEX IF NOT EXISTS idx_ejecucion_items_checklist ON ejecucion_checklist_items(checklist_item_id);
 
 -- Tabla: ordenes_correctivas
@@ -307,6 +313,7 @@ CREATE TABLE IF NOT EXISTS ordenes_correctivas (
     equipo_id INTEGER NOT NULL REFERENCES equipos(id),
     tipo_falla_id INTEGER NOT NULL REFERENCES tipos_falla(id),
     prioridad_id INTEGER NOT NULL REFERENCES prioridades_falla(id),
+    zona_id INTEGER NULL REFERENCES zonas(id),
     fecha_reporte DATE NOT NULL,
     hora_reporte TIME NOT NULL,
     reportado_por_usuario_id INTEGER NOT NULL REFERENCES usuarios(id),

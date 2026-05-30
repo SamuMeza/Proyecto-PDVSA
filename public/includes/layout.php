@@ -13,6 +13,7 @@ $navItems = [
     ['slug' => 'index',       'label' => 'Inicio',           'url' => BASE_PATH . '/public/index.php',       'icon' => '⌂'],
     ['slug' => 'equipos',     'label' => 'Equipos',          'url' => BASE_PATH . '/public/equipos.php',     'icon' => '⚙'],
     ['slug' => 'preventivas', 'label' => 'Órdenes preventivas', 'url' => BASE_PATH . '/public/preventivas.php', 'icon' => '📅'],
+    ['slug' => 'calendario', 'label' => 'Calendario', 'url' => BASE_PATH . '/public/calendario.php', 'icon' => '🗓'],
     ['slug' => 'correctivas', 'label' => 'Órdenes correctivas', 'url' => BASE_PATH . '/public/correctivas.php', 'icon' => '🔧'],
     ['slug' => 'reportes',    'label' => 'Reportes',         'url' => BASE_PATH . '/public/reportes.php',    'icon' => '📊'],
     ['slug' => 'usuarios',    'label' => 'Usuarios',         'url' => BASE_PATH . '/public/usuarios.php',    'icon' => '👤'],

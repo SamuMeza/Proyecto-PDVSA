@@ -12,5 +12,5 @@
 
 ## 3. Pruebas de Sintaxis y Ejecución
 
-- [ ] 3.1 Probar la ejecución de `sql/schema_postgresql.sql` contra una base de datos PostgreSQL local en limpio para confirmar que no haya errores de sintaxis o dependencias circulares.
-- [ ] 3.2 Probar la ejecución de `sql/schema_mysql.sql` contra una base de datos MySQL local en limpio para validar las llaves foráneas.
+- [x] 3.1 Probar la ejecución de `sql/schema_postgresql.sql` contra una base de datos PostgreSQL local en limpio para confirmar que no haya errores de sintaxis o dependencias circulares.
+- [x] 3.2 Probar la ejecución de `sql/schema_mysql.sql` contra una base de datos MySQL local en limpio para validar las llaves foráneas.
