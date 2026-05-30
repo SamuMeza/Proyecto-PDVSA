@@ -1,0 +1,156 @@
+/* === Calendar Week View === */
+.cal-week-grid {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.85rem;
+    overflow-x: auto;
+}
+
+.cal-week-header {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    background: var(--bg-surface);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.cal-hour-label {
+    padding: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+    border-right: 1px solid var(--border);
+    background: var(--bg-surface);
+}
+
+.cal-day-header {
+    padding: 8px 4px;
+    text-align: center;
+    font-weight: 600;
+    border-right: 1px solid var(--border);
+}
+
+.cal-day-header small {
+    font-weight: normal;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.cal-week-row {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    border-bottom: 1px solid var(--border);
+}
+
+.cal-week-row:hover {
+    background: rgba(0,0,0,0.02);
+}
+
+.cal-cell {
+    min-height: 40px;
+    padding: 2px;
+    border-right: 1px solid var(--border);
+}
+
+.cal-event {
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.cal-event:hover {
+    opacity: 0.85;
+}
+
+/* === Calendar Month View === */
+.cal-month-grid {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.85rem;
+}
+
+.cal-month-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--bg-surface);
+    border-bottom: 2px solid var(--border);
+    text-align: center;
+    font-weight: 600;
+    padding: 8px 0;
+}
+
+.cal-month-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border);
+}
+
+.cal-month-cell {
+    min-height: 100px;
+    padding: 6px;
+    border-right: 1px solid var(--border);
+    position: relative;
+}
+
+.cal-month-cell.cal-empty {
+    background: rgba(0,0,0,0.02);
+}
+
+.cal-month-cell.cal-today {
+    background: rgba(135, 7, 7, 0.05);
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.cal-month-cell.cal-selected {
+    background: rgba(135, 7, 7, 0.1);
+}
+
+.cal-day-number {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.cal-day-summary {
+    margin-bottom: 4px;
+}
+
+.cal-day-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+}
+
+.cal-month-event {
+    font-size: 0.7rem;
+    padding: 1px 4px;
+    margin: 1px 0;
+    border-radius: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cal-month-more {
+    font-size: 0.7rem;
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* === Responsive Calendar === */
+@media (max-width: 768px) {
+    .cal-week-header,
+    .cal-week-row {
+        min-width: 700px;
+    }
+
+    .cal-month-cell {
+        min-height: 70px;
+        padding: 4px;
+        font-size: 0.75rem;
+    }
+}
