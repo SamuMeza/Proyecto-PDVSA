@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../auth/auth_functions.php';
+requerirPermiso('usuarios', 'ver');
+
 $pageTitle = 'Usuarios';
 $pageSlug  = 'usuarios';
 require __DIR__ . '/includes/layout.php';

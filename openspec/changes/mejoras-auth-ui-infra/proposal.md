@@ -1,26 +1,33 @@
 ## Why
 
-Actualmente, el sistema carece de un flujo de autenticación seguro y moderno que incorpore verificación de dos factores (OTP), control granular de acceso mediante JSON de permisos, y una interfaz de usuario cohesiva que refleje la identidad de la marca. Esta propuesta establece las bases de seguridad, control de acceso y diseño visual premium (UI/UX) requeridas para las fases posteriores del sistema de mantenimiento.
+El sistema requiere una base de autenticación sólida y una administración de usuarios controlada para operar de forma segura. Esta propuesta detalla el flujo de login y registro, la administración de sesiones, el control de permisos y un layout consistente con tema claro/oscuro en todo el sistema.
 
 ## What Changes
 
-- **Flujo de Autenticación Mejorado**: Renovación visual del inicio de sesión (Login) con soporte para logotipo dinámico y verificación de código OTP de un solo uso.
-- **Seguridad en OTP**: Implementación de un límite de intentos diarios para la solicitud y validación de OTP, configurable mediante los parámetros del sistema, con bloqueo de cuenta temporal al alcanzar el límite.
-- **Control de Acceso Basado en Permisos (RBAC)**: Procesamiento de permisos granular a través de `permisos_json` definido para cada rol en la base de datos, estructurado como `{"modulo": {"accion": true}}` o similar.
-- **Plantilla Base y UI Consistente**: Creación de un layout responsive y moderno con un sidebar colapsable, cabecera y espacio de trabajo principal que aplique un estilo visual premium (colores corporativos, tipografía moderna, transiciones y animaciones suaves).
+- **Registro de usuarios restringido**: Solo el rol `Administrador` puede crear cuentas nuevas. `auth/register.php` y el enlace de registro estarán accesibles únicamente para administradores autenticados.
+- **Email interno automático**: El sistema genera internamente el correo como `nombre_usuario@pdvsa.com` y lo guarda en la base de datos. El formulario de registro no solicita un dominio externo.
+- **Teléfono con prefijo obligatorio**: El campo de teléfono se guarda en un solo campo y exige el prefijo `+58`.
+- **Sesiones inactivas por rol**: Los tiempos son Admin 10 min, Supervisor 20 min y Otros 35 min. Cualquier actividad (mouse/tecla/clic) renueva el contador, el modal aparece 2 min antes y si se ignora el sistema cierra sesión de inmediato.
+- **Tema global dark/light**: El modo oscuro/claro debe aplicarse a todo el sistema, incluyendo login, sidebar, mensajes de error, formularios y tablas.
+- **Layout premium**: Sidebar colapsable en la izquierda, logotipo PDVSA en login y menú, y navegación moderna con interacciones suaves.
+- **Permisos basados en JSON**: Se usa `permisos_json` para habilitar acciones por módulo, con una estructura como `{"equipos": {"ver": true, "editar": false}, "calendario": {"crear": true}}`.
 
 ## Capabilities
 
 ### New Capabilities
-- `secure-auth-otp`: Autenticación segura con verificación mediante código de un solo uso (OTP), validación de estado de usuario activo, límites configurables de generación de OTP diarios y redirecciones basadas en el rol.
-- `role-based-permissions`: Control de acceso a nivel de aplicación mediante el análisis y mapeo del campo `permisos_json` asociado al rol de cada usuario para habilitar/deshabilitar acciones y vistas específicas.
-- `ui-base-layout`: Layout base responsivo con diseño moderno y soporte para tematización visual premium, incluyendo sidebar interactivo, manejo de logotipos y alertas globales de sistema.
+- `auth-admin-registration`: Registro de usuarios accesible únicamente a Administradores.
+- `internal-email-generation`: Generación y almacenamiento de correo interno `nombre_usuario@pdvsa.com`.
+- `phone-58-format`: Validación y almacenamiento de teléfono con prefijo `+58`.
+- `idle-session-per-role`: Sesiones con expiración por rol, modal previo y cierre inmediato si se ignora.
+- `ui-theme-global`: Tema claro/oscuro aplicado en todo el sistema.
+- `role-based-permissions`: Control granular de acciones basado en `permisos_json`.
 
 ### Modified Capabilities
 <!-- No existing capabilities to modify -->
 
 ## Impact
 
-- **Base de Datos**: Consumo de datos desde `tabla_usuarios.md`, `tabla_roles.md`, y `tabla_configuracion_sistema.md` para validar credenciales, decodificar permisos y leer límites de OTP.
-- **Código PHP**: Actualización del motor de autenticación en `auth/` e incorporación de sesiones PHP más seguras.
-- **Interfaz y CSS**: Adición de hojas de estilo globales en `css/` y componentes visuales reutilizables.
+- **Base de Datos**: Ajustes en `tabla_usuarios.md` para almacenar `email` interno y `telefono_extension` con formato `+58`.
+- **Código PHP**: Restricción de registro para Administrador y lógica de sesión con renovaciones por actividad.
+- **Interfaz y CSS**: Tema global, modal de cierre de sesión y sidebar responsive.
+- **Seguridad**: Se reduce la superficie de creación de usuarios y se documenta el flujo de sesiones inactivas.

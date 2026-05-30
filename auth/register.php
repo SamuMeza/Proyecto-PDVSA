@@ -79,14 +79,15 @@ require dirname(__DIR__) . '/public/includes/layout.php';
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="email">Correo</label>
-                                <input type="email" id="email" name="email"
-                                       value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
-                            </div>
-                            <div class="form-group">
                                 <label for="telefono_extension">Teléfono / extensión</label>
                                 <input type="text" id="telefono_extension" name="telefono_extension"
+                                       placeholder="+58XXXXXXXXXXX"
                                        value="<?= htmlspecialchars($_POST['telefono_extension'] ?? '') ?>">
+                            </div>
+                            <div class="form-group">
+                                <p style="margin-top: 1rem; color: var(--text-secondary);">
+                                    El correo se generará automáticamente como <code>usuario@pdvsa.com</code>.
+                                </p>
                             </div>
                         </div>
 

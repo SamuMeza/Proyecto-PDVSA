@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/../auth/auth_functions.php';
+requerirPermiso('correctivas', 'ver');
+
 $pageTitle = 'Órdenes correctivas';
 $pageSlug  = 'correctivas';
 require __DIR__ . '/includes/layout.php';

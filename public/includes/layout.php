@@ -26,6 +26,8 @@ if (esAdministrador()) {
         'icon'  => '➕',
     ];
 }
+
+$logoPath = obtenerRutaLogoPdvsa();
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="light">
@@ -39,7 +41,12 @@ if (esAdministrador()) {
     <div class="app-layout">
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-brand">PDV<span>SA</span></div>
+                <div class="sidebar-brand">
+                    <?php if ($logoPath): ?>
+                        <img src="<?= htmlspecialchars($logoPath) ?>" alt="PDVSA" class="sidebar-logo">
+                    <?php endif; ?>
+                    PDV<span>SA</span>
+                </div>
                 <button type="button" id="sidebar-toggle" class="sidebar-toggle" aria-label="Ocultar menú">‹</button>
             </div>
             <nav class="sidebar-nav">
