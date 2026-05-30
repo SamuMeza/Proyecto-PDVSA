@@ -291,25 +291,6 @@ CREATE TABLE IF NOT EXISTS ejecuciones_preventivas (
     INDEX idx_ejecuciones_mantenedor (mantenedor_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabla: ejecucion_checklist_items
-CREATE TABLE IF NOT EXISTS ejecucion_checklist_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    ejecucion_preventiva_id INT NULL,
-    orden_correctiva_id INT NULL,
-    checklist_item_id INT NOT NULL,
-    marcado_como_hecho BOOLEAN DEFAULT FALSE,
-    observacion_item TEXT NULL,
-    fecha_marcado TIMESTAMP NULL,
-    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_ejecucion_items_ejecucion FOREIGN KEY (ejecucion_preventiva_id) REFERENCES ejecuciones_preventivas(id) ON DELETE SET NULL,
-    CONSTRAINT fk_ejecucion_items_orden_correctiva FOREIGN KEY (orden_correctiva_id) REFERENCES ordenes_correctivas(id) ON DELETE SET NULL,
-    CONSTRAINT fk_ejecucion_items_checklist FOREIGN KEY (checklist_item_id) REFERENCES checklist_items(id),
-    INDEX idx_ejecucion_items_ejecucion (ejecucion_preventiva_id),
-    INDEX idx_ejecucion_items_otc (orden_correctiva_id),
-    INDEX idx_ejecucion_items_checklist (checklist_item_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- Tabla: ordenes_correctivas
 CREATE TABLE IF NOT EXISTS ordenes_correctivas (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -376,6 +357,25 @@ CREATE TABLE IF NOT EXISTS fotos_correctivas (
     CONSTRAINT fk_fotos_subida_por FOREIGN KEY (subida_por_usuario_id) REFERENCES usuarios(id),
     INDEX idx_fotos_otc (orden_correctiva_id),
     INDEX idx_fotos_tipo (tipo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla: ejecucion_checklist_items
+CREATE TABLE IF NOT EXISTS ejecucion_checklist_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ejecucion_preventiva_id INT NULL,
+    orden_correctiva_id INT NULL,
+    checklist_item_id INT NOT NULL,
+    marcado_como_hecho BOOLEAN DEFAULT FALSE,
+    observacion_item TEXT NULL,
+    fecha_marcado TIMESTAMP NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ejecucion_items_ejecucion FOREIGN KEY (ejecucion_preventiva_id) REFERENCES ejecuciones_preventivas(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ejecucion_items_orden_correctiva FOREIGN KEY (orden_correctiva_id) REFERENCES ordenes_correctivas(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ejecucion_items_checklist FOREIGN KEY (checklist_item_id) REFERENCES checklist_items(id),
+    INDEX idx_ejecucion_items_ejecucion (ejecucion_preventiva_id),
+    INDEX idx_ejecucion_items_otc (orden_correctiva_id),
+    INDEX idx_ejecucion_items_checklist (checklist_item_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabla: calibraciones

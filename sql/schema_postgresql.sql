@@ -289,23 +289,6 @@ CREATE TABLE IF NOT EXISTS ejecuciones_preventivas (
 CREATE INDEX IF NOT EXISTS idx_ejecuciones_otp ON ejecuciones_preventivas(orden_preventiva_id);
 CREATE INDEX IF NOT EXISTS idx_ejecuciones_mantenedor ON ejecuciones_preventivas(mantenedor_id);
 
--- Tabla: ejecucion_checklist_items
-CREATE TABLE IF NOT EXISTS ejecucion_checklist_items (
-    id SERIAL PRIMARY KEY,
-    ejecucion_preventiva_id INTEGER NULL REFERENCES ejecuciones_preventivas(id) ON DELETE SET NULL,
-    orden_correctiva_id INTEGER NULL REFERENCES ordenes_correctivas(id) ON DELETE SET NULL,
-    checklist_item_id INTEGER NOT NULL REFERENCES checklist_items(id),
-    marcado_como_hecho BOOLEAN DEFAULT FALSE,
-    observacion_item TEXT NULL,
-    fecha_marcado TIMESTAMP NULL,
-    creado_en TIMESTAMP DEFAULT NOW(),
-    actualizado_en TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_ejecucion_items_ejecucion ON ejecucion_checklist_items(ejecucion_preventiva_id);
-CREATE INDEX IF NOT EXISTS idx_ejecucion_items_otc ON ejecucion_checklist_items(orden_correctiva_id);
-CREATE INDEX IF NOT EXISTS idx_ejecucion_items_checklist ON ejecucion_checklist_items(checklist_item_id);
-
 -- Tabla: ordenes_correctivas
 CREATE TABLE IF NOT EXISTS ordenes_correctivas (
     id SERIAL PRIMARY KEY,
@@ -363,6 +346,23 @@ CREATE TABLE IF NOT EXISTS fotos_correctivas (
 
 CREATE INDEX IF NOT EXISTS idx_fotos_otc ON fotos_correctivas(orden_correctiva_id);
 CREATE INDEX IF NOT EXISTS idx_fotos_tipo ON fotos_correctivas(tipo);
+
+-- Tabla: ejecucion_checklist_items
+CREATE TABLE IF NOT EXISTS ejecucion_checklist_items (
+    id SERIAL PRIMARY KEY,
+    ejecucion_preventiva_id INTEGER NULL REFERENCES ejecuciones_preventivas(id) ON DELETE SET NULL,
+    orden_correctiva_id INTEGER NULL REFERENCES ordenes_correctivas(id) ON DELETE SET NULL,
+    checklist_item_id INTEGER NOT NULL REFERENCES checklist_items(id),
+    marcado_como_hecho BOOLEAN DEFAULT FALSE,
+    observacion_item TEXT NULL,
+    fecha_marcado TIMESTAMP NULL,
+    creado_en TIMESTAMP DEFAULT NOW(),
+    actualizado_en TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ejecucion_items_ejecucion ON ejecucion_checklist_items(ejecucion_preventiva_id);
+CREATE INDEX IF NOT EXISTS idx_ejecucion_items_otc ON ejecucion_checklist_items(orden_correctiva_id);
+CREATE INDEX IF NOT EXISTS idx_ejecucion_items_checklist ON ejecucion_checklist_items(checklist_item_id);
 
 -- Tabla: calibraciones
 CREATE TABLE IF NOT EXISTS calibraciones (
