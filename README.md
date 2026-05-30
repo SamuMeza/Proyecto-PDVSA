@@ -35,7 +35,7 @@ sistema_pdvsa/
 
 Si la base ya existía sin el admin, ejecutar:
 ```bash
-mysql -u root sistema_pdvsa < sql/seed_admin.sql
+mysql -u root sistema_pdvsa < database/seeds/seed_admin.sql
 ```
 
 ## Tema y navegación

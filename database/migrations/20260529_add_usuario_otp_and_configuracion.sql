@@ -1,5 +1,5 @@
 -- Migración para agregar soporte de OTP y configuración del sistema
--- Ejecutar en MySQL: mysql -u root < sql/migrations/20260529_add_usuario_otp_and_configuracion.sql
+-- Ejecutar en MySQL: mysql -u root < database/migrations/20260529_add_usuario_otp_and_configuracion.sql
 
 USE sistema_pdvsa;
 
