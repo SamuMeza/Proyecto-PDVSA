@@ -1,0 +1,8 @@
+<?php
+
+define('SESION_HORAS', 8);
+define('SESION_MAX_SEGUNDOS', SESION_HORAS * 3600);
+
+define('SESSION_TIMEOUT_ADMIN', (int)(getenv('SESSION_ADMIN_TIMEOUT') ?: 10));
+define('SESSION_TIMEOUT_SUPERVISOR', (int)(getenv('SESSION_SUPERVISOR_TIMEOUT') ?: 20));
+define('SESSION_TIMEOUT_OTHER', (int)(getenv('SESSION_OTHER_TIMEOUT') ?: 35));

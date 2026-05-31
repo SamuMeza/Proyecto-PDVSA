@@ -1,0 +1,13 @@
+{
+    "name": "pdvsa/sistema-mantenimiento",
+    "description": "Sistema de Mantenimiento PDVSA Punta Mata",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.1"
+    }
+}

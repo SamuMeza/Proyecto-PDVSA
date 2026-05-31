@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS calibraciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipo_id INT NOT NULL,
+    tipo_calibracion VARCHAR(50) NOT NULL,
+    fecha_ultima_calibracion DATE NOT NULL,
+    fecha_proxima_calibracion DATE NOT NULL,
+    entidad_certificadora VARCHAR(200) NULL,
+    certificado_ruta VARCHAR(255) NULL,
+    rango_medicion VARCHAR(100) NULL,
+    error_permitido VARCHAR(50) NULL,
+    observaciones TEXT NULL,
+    registrado_por_usuario_id INT NOT NULL,
+    estado VARCHAR(50) DEFAULT 'al_dia',
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_calibraciones_equipo FOREIGN KEY (equipo_id) REFERENCES equipos(id),
+    CONSTRAINT fk_calibraciones_registrado_por FOREIGN KEY (registrado_por_usuario_id) REFERENCES usuarios(id),
+    INDEX idx_calibraciones_equipo (equipo_id),
+    INDEX idx_calibraciones_fecha_proxima (fecha_proxima_calibracion),
+    INDEX idx_calibraciones_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

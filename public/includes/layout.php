@@ -1,34 +1,36 @@
 <?php
-/**
- * Layout compartido con barra lateral y tema.
- * Variables requeridas: $pageTitle, $pageSlug (opcional, para nav activo)
- */
-require_once dirname(__DIR__, 2) . '/auth/auth_functions.php';
-requerirAutenticacion();
+require_once dirname(__DIR__, 2) . '/config/autoload.php';
+
+use App\Core\App;
+use App\Core\Session;
+use App\Services\AuthService;
+use App\Models\ConfiguracionSistema;
+
+Session::start();
 
 $pageTitle = $pageTitle ?? 'Página';
 $pageSlug  = $pageSlug ?? '';
 
 $navItems = [
-    ['slug' => 'index',       'label' => 'Inicio',           'url' => BASE_PATH . '/public/index.php',       'icon' => '⌂'],
-    ['slug' => 'equipos',     'label' => 'Equipos',          'url' => BASE_PATH . '/public/equipos.php',     'icon' => '⚙'],
-    ['slug' => 'preventivas', 'label' => 'Órdenes preventivas', 'url' => BASE_PATH . '/public/preventivas.php', 'icon' => '📅'],
-    ['slug' => 'calendario', 'label' => 'Calendario', 'url' => BASE_PATH . '/public/calendario.php', 'icon' => '🗓'],
-    ['slug' => 'correctivas', 'label' => 'Órdenes correctivas', 'url' => BASE_PATH . '/public/correctivas.php', 'icon' => '🔧'],
-    ['slug' => 'reportes',    'label' => 'Reportes',         'url' => BASE_PATH . '/public/reportes.php',    'icon' => '📊'],
-    ['slug' => 'usuarios',    'label' => 'Usuarios',         'url' => BASE_PATH . '/public/usuarios.php',    'icon' => '👤'],
+    ['slug' => 'index',       'label' => 'Inicio',           'url' => App::BASE_PATH . '/public/index.php',       'icon' => '⌂'],
+    ['slug' => 'equipos',     'label' => 'Equipos',          'url' => App::BASE_PATH . '/public/equipos.php',     'icon' => '⚙'],
+    ['slug' => 'preventivas', 'label' => 'Órdenes preventivas', 'url' => App::BASE_PATH . '/public/preventivas.php', 'icon' => '📅'],
+    ['slug' => 'calendario', 'label' => 'Calendario', 'url' => App::BASE_PATH . '/public/calendario.php', 'icon' => '🗓'],
+    ['slug' => 'correctivas', 'label' => 'Órdenes correctivas', 'url' => App::BASE_PATH . '/public/correctivas.php', 'icon' => '🔧'],
+    ['slug' => 'reportes',    'label' => 'Reportes',         'url' => App::BASE_PATH . '/public/reportes.php',    'icon' => '📊'],
+    ['slug' => 'usuarios',    'label' => 'Usuarios',         'url' => App::BASE_PATH . '/public/usuarios.php',    'icon' => '👤'],
 ];
 
-if (esAdministrador()) {
+if (AuthService::isAdmin()) {
     $navItems[] = [
         'slug'  => 'registrar',
         'label' => 'Registrar usuario',
-        'url'   => BASE_PATH . '/auth/register.php',
+        'url'   => App::BASE_PATH . '/auth/register.php',
         'icon'  => '➕',
     ];
 }
 
-$logoPath = obtenerRutaLogoPdvsa();
+$logoPath = ConfiguracionSistema::getLogoPath();
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="light">
@@ -36,7 +38,7 @@ $logoPath = obtenerRutaLogoPdvsa();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?> — Sistema PDVSA</title>
-    <link rel="stylesheet" href="<?= BASE_PATH ?>/css/styles.css">
+    <link rel="stylesheet" href="<?= App::BASE_PATH ?>/public/assets/css/main.css">
 </head>
 <body>
     <div class="app-layout">
@@ -65,10 +67,10 @@ $logoPath = obtenerRutaLogoPdvsa();
             </nav>
             <div class="sidebar-footer">
                 <div class="sidebar-user">
-                    <strong><?= htmlspecialchars($_SESSION['nombre_completo'] ?? '') ?></strong>
-                    <?= htmlspecialchars($_SESSION['rol_nombre'] ?? '') ?>
+                    <strong><?= htmlspecialchars(Session::get('nombre_completo', '')) ?></strong>
+                    <?= htmlspecialchars(Session::get('rol_nombre', '')) ?>
                 </div>
-                <a href="<?= BASE_PATH ?>/auth/logout.php" class="btn-logout">Cerrar sesión</a>
+                <a href="<?= App::BASE_PATH ?>/auth/logout.php" class="btn-logout">Cerrar sesión</a>
             </div>
         </aside>
 

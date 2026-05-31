@@ -1,0 +1,41 @@
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.data-table th,
+.data-table td {
+    border: 1px solid var(--border);
+    padding: 0.85rem 1rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.data-table thead {
+    background: var(--bg-surface);
+}
+
+.inactive-row {
+    background: rgba(231, 76, 60, 0.08);
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.tag-active {
+    background: rgba(46, 204, 113, 0.18);
+    color: #27ae60;
+}
+
+.tag-inactive {
+    background: rgba(231, 76, 60, 0.18);
+    color: #c0392b;
+}
