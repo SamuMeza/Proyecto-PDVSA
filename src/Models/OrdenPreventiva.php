@@ -59,7 +59,7 @@ class OrdenPreventiva extends Model
     {
         return self::rawOne(
             'SELECT op.*, e.nombre AS equipo_nombre, e.numero_activo_fijo,
-                    nm.nombre AS nivel_nombre, u.nombre_completo AS planificador_nombre,
+                    nm.nombre_nivel AS nivel_nombre, u.nombre_completo AS planificador_nombre,
                     s.nombre_completo AS supervisor_nombre, m.nombre_completo AS mantenedor_nombre
              FROM ordenes_preventivas op
              LEFT JOIN equipos e ON e.id = op.equipo_id

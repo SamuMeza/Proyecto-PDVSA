@@ -8,6 +8,6 @@ class NivelMantenimiento extends Model
 
     public static function allActive(): array
     {
-        return self::findWhere("estado = 'activo'", [], 'nombre');
+        return self::findWhere("estado = 'activo'", [], 'nombre_nivel');
     }
 }

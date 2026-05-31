@@ -157,7 +157,7 @@
                             <select id="nivel_mantenimiento_id" name="nivel_mantenimiento_id" required>
                                 <option value="">Seleccione</option>
                                 <?php foreach ($nivelesMantenimiento as $nm): ?>
-                                    <option value="<?= $nm['id'] ?>" <?= $formData['nivel_mantenimiento_id'] == $nm['id'] ? 'selected' : '' ?>><?= htmlspecialchars($nm['nombre']) ?></option>
+                                    <option value="<?= $nm['id'] ?>" <?= $formData['nivel_mantenimiento_id'] == $nm['id'] ? 'selected' : '' ?>><?= htmlspecialchars($nm['nombre_nivel']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

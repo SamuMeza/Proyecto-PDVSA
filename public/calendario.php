@@ -18,7 +18,8 @@ $puedeCrear = AuthService::isAdmin();
 $puedeEditar = AuthService::isAdmin() || in_array($rolActual, ['Supervisor', 'Planificador/Programador'], true);
 $puedeEliminar = AuthService::isAdmin();
 
-$viewMode = in_array($_GET['view'] ?? 'week', ['week', 'month'], true) ? $_GET['view'] : 'week';
+$view = $_GET['view'] ?? 'week';
+$viewMode = in_array($view, ['week', 'month'], true) ? $view : 'week';
 $familiaFilter = trim($_GET['familia'] ?? '');
 $dayDetail = (int) ($_GET['day'] ?? 0);
 
@@ -104,7 +105,7 @@ if ($viewMode === 'month') {
     $ordenes = OrdenPreventiva::raw(
         'SELECT op.id, op.codigo_unico, op.fecha_planificada, op.hora_inicio, op.hora_fin,
                 op.estado, e.nombre AS equipo_nombre, c.nombre AS familia, c.color_calendario,
-                nm.nombre AS nivel
+                nm.nombre_nivel AS nivel
          FROM ordenes_preventivas op
          JOIN equipos e ON e.id = op.equipo_id
          JOIN categorias_equipo c ON c.id = e.categoria_id

@@ -5,6 +5,7 @@ use App\Core\App;
 use App\Core\Session;
 use App\Services\AuthService;
 use App\Models\User;
+use App\Models\UserOtp;
 
 Session::start();
 
@@ -36,6 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $error = $result['error'] ?? 'Error desconocido.';
 }
+
+$otpRecord = UserOtp::findByUser((int) $userId);
+$codigoGenerado = $otpRecord['codigo'] ?? null;
 
 $pageTitle = 'Verificación OTP';
 $authCardWide = '';

@@ -38,7 +38,7 @@ $categorias = CategoriaEquipo::allActive();
 $zonas = Zona::allActive();
 $usuariosActivos = \App\Models\User::raw("SELECT id, nombre_completo FROM usuarios WHERE estado = 'activo' ORDER BY nombre_completo");
 $checklists = Checklist::raw(
-    "SELECT c.id, c.nombre_checklist, nm.nombre AS nivel FROM checklists c LEFT JOIN niveles_mantenimiento nm ON nm.id = c.nivel_mantenimiento_id WHERE c.estado = 'activo' ORDER BY c.nombre_checklist"
+    "SELECT c.id, c.nombre_checklist, nm.nombre_nivel AS nivel FROM checklists c LEFT JOIN niveles_mantenimiento nm ON nm.id = c.nivel_mantenimiento_id WHERE c.estado = 'activo' ORDER BY c.nombre_checklist"
 );
 
 $transiciones = OrdenCorrectiva::validStates();

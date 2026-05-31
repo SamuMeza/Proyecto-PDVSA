@@ -4,49 +4,60 @@
 
 **Instalación inicial (XAMPP/MySQL):**
 1. Iniciar Apache y MySQL en XAMPP
-2. Importar esquema: `mysql -u root < sql/schema_mysql.sql`
-3. Admin por defecto: usuario=`admin`, contraseña=`Admin2026!`
-4. Acceder: `http://localhost/sistema_pdvsa/`
+2. Importar migraciones en orden: `for %f in (database\migrations\0*.sql) do mysql -u root < %f`
+3. Importar seeds: `for %f in (database\seeds\0*.sql) do mysql -u root < %f`
+4. Admin por defecto: usuario=`admin`, contraseña=`Admin2026!`
+5. Acceder: `http://localhost/sistema_pdvsa/`
 
 **Para PostgreSQL:**
-1. Importar: `mysql -u root < sql/schema_postgresql.sql`
-2. En `config/db.php` o variables de entorno: `DB_DRIVER=pgsql`
+- Configurar `DB_DRIVER=pgsql` en `.env`
 
 **Migración MySQL → PostgreSQL:**
 ```bash
 php scripts/migrate_mysql_to_postgresql.php
 ```
-Variables opcionales: `MYSQL_HOST`, `MYSQL_DB`, `PG_HOST`, `PG_DB`
 
-## Estructura clave
+## Estructura completa
 
-- `auth/` - Login, registro, OTP (`auth/login.php`, `auth/otp_verify.php`)
-- `public/` - Páginas principales (requieren sesión): `equipos.php`, `reportes.php`, etc.
-- `css/` - Estilos, tema claro/oscuro, sidebar responsive, session keepalive
-- `sql/` - Esquemas y migraciones MySQL/PostgreSQL
-- `scripts/` - Herramientas de migración
-- `openspec/` - Propuestas y especificaciones (NO modificar/eliminar)
-- `.opencode/` - Configuración de OpenCode
+```
+├── .env.example, .gitignore, README.md, composer.json
+├── config/          → database.php, app.php, routes.php, session.php, autoload.php
+├── public/          → Document root del servidor
+│   ├── index.php    → Front controller
+│   ├── .htaccess    → Rewrite rules
+│   ├── assets/css/  → main.css (+ dashboard, calendar, forms, tables)
+│   ├── assets/js/   → app, dashboard, calendar, forms, alerts, charts, theme, sidebar, session
+│   ├── assets/images/ → logo-pdvsa.png, favicon.ico, avatars/
+│   ├── assets/uploads/ → fotos-fallas, certificados, reportes-pdf
+│   └── assets/fonts/inter/
+├── src/
+│   ├── Core/        → App, Router, Request, Response, Database, Session, Auth, Logger
+│   ├── Models/      → 17 modelos (Zona, Equipo, User, Role, Localidad, Area, etc.)
+│   ├── Controllers/ → 10 controladores (Auth, Dashboard, Equipo, Preventiva, Correctiva, etc.)
+│   ├── Services/    → 12 servicios (Auth, Equipo, Preventiva, Correctiva, PDF, Chart, etc.)
+│   ├── Views/       → layouts/, partials/, dashboard/, equipos/, preventivo/, etc.
+│   ├── Middleware/   → Auth, Role, Session, Csrf
+│   ├── Helpers/     → Date, String, File, Validation, Security
+│   └── Exceptions/  → App, Validation, Auth, NotFound
+├── database/
+│   ├── migrations/  → 001-028 (numeradas)
+│   ├── seeds/       → 001-008
+│   └── procedures/  → sp_generar_calendario, sp_calcular_downtime, sp_generar_alertas
+├── docs/            → INSTALL, CONFIG, DATABASE, API, ROLES, CHANGELOG
+├── logs/            → app.log, auth.log, errors.log, queries.log
+├── temp/            → cache/, sessions/, uploads-temp/
+└── tests/           → Unit/, Integration/, Feature/, phpunit.xml
+```
 
-## Puntos críticos de autenticación
+## Puntos críticos
 
-- Las páginas en `public/` requieren sesión activa (verificar con `estaAutenticado()`)
-- Registro de usuarios solo accesible para rol Administrador
-- Sistema OTP: login en 2 pasos (credenciales → código OTP)
+- Páginas en `public/` requieren sesión activa (check con `AuthService::check()`)
+- Registro de usuarios solo para rol Administrador
+- Sistema OTP: login en 2 pasos
 - Sesiones con timeout por rol: Admin(10min), Supervisor(20min), Otros(35min)
-- Renovar sesión: `public/session_keepalive.php` (llamar vía AJAX cada minuto)
-
-## Notas importantes
-
-- El tema claro/oscuro se controla mediante `data-theme` en `<html>` y CSS variables
-- Barra lateral colapsable con toggle en header
-- `config/db.php` maneja automáticamente MySQL vs PostgreSQL vía variable de entorno
-- Los permisos se validan mediante `permisos_json` en sesión y función `tienePermiso()`
-- Nunca eliminar la carpeta `openspec/` - contiene propuestas para futuras implementaciones
-
-## Verificación rápida
-
-Para verificar que el sistema funciona:
-1. Login con admin/Admin2026!
-2. Acceder a `/public/equipos.php` (módulo de equipos recientemente implementado)
-3. Verificar que el tema se puede togglear y la barra lateral se colapsa
+- La sesión NO se almacena en archivos sino en la tabla `usuarios` (`sesion_activa_token`)
+- Las migraciones están en `database/migrations/` (NUNCA modificar las ya aplicadas)
+- `openspec/` contiene propuestas (NO modificar/eliminar)
+- `auth/`, `scripts/` y archivos legacy en `public/` conviven con el nuevo MVC
+- Autoloader PSR-4: `App\` → `src/` (vía `config/autoload.php`)
+- Los nombres de modelos/controladores existentes (User, Role, Preventiva, Correctiva) se mantienen
