@@ -46,7 +46,7 @@ $logoPath = ConfiguracionSistema::getLogoPath();
             <div class="sidebar-header">
                 <div class="sidebar-brand">
                     <?php if ($logoPath): ?>
-                        <img src="<?= htmlspecialchars($logoPath) ?>" alt="PDVSA" class="sidebar-logo">
+                        <img src="<?= App::BASE_PATH . ltrim($logoPath, '/') ?>" alt="PDVSA" class="sidebar-logo">
                     <?php endif; ?>
                     PDV<span>SA</span>
                 </div>
