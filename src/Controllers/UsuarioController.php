@@ -9,6 +9,7 @@ use App\Core\Session;
 use App\Models\User;
 use App\Models\Role;
 use App\Services\AuthService;
+use App\Helpers\SecurityHelper;
 
 class UsuarioController
 {
@@ -123,18 +124,28 @@ class UsuarioController
             $nombreCompleto = trim($_POST['nombre_completo'] ?? '');
             $rolId = (int) ($_POST['rol_id'] ?? 0);
             $estado = $_POST['estado'] ?? $usuario['estado'];
+            $nuevaContrasena = trim($_POST['nueva_contrasena'] ?? '');
+            $confirmarContrasena = trim($_POST['confirmar_contrasena'] ?? '');
 
             if ($nombreCompleto === '') {
                 $error = 'El nombre completo es obligatorio.';
             } elseif (!Role::existsActive($rolId)) {
                 $error = 'Rol no válido.';
+            } elseif ($nuevaContrasena !== '' && strlen($nuevaContrasena) < 6) {
+                $error = 'La contraseña debe tener al menos 6 caracteres.';
+            } elseif ($nuevaContrasena !== '' && $nuevaContrasena !== $confirmarContrasena) {
+                $error = 'Las contraseñas no coinciden.';
             } else {
-                User::update($id, [
+                $updates = [
                     'nombre_completo' => $nombreCompleto,
                     'rol_id' => $rolId,
                     'estado' => in_array($estado, ['activo', 'inactivo']) ? $estado : $usuario['estado'],
                     'actualizado_en' => date('Y-m-d H:i:s'),
-                ]);
+                ];
+                if ($nuevaContrasena !== '') {
+                    $updates['contrasena_hash'] = SecurityHelper::hashPassword($nuevaContrasena);
+                }
+                User::update($id, $updates);
                 $usuario = User::find($id);
                 $success = 'Usuario actualizado exitosamente.';
             }

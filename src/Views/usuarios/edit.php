@@ -36,6 +36,17 @@
                 <option value="inactivo" <?= $usuario['estado'] === 'inactivo' ? 'selected' : '' ?>>Inactivo</option>
             </select>
         </div>
+        <div class="form-group" style="grid-column:1 / -1; border-top:1px solid var(--border); padding-top:1rem; margin-top:0.5rem;">
+            <label style="font-size:1em; margin-bottom:0.5rem;">Cambiar contraseña (opcional)</label>
+        </div>
+        <div class="form-group">
+            <label>Nueva contraseña</label>
+            <input type="password" name="nueva_contrasena" minlength="6" placeholder="Dejar vacío para no cambiar">
+        </div>
+        <div class="form-group">
+            <label>Confirmar contraseña</label>
+            <input type="password" name="confirmar_contrasena" minlength="6" placeholder="Repetir contraseña">
+        </div>
         <div class="form-group" style="grid-column:1 / -1; text-align:right;">
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Actualizar</button>
