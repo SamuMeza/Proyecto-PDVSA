@@ -1,5 +1,5 @@
 <h2>Editar Equipo</h2>
-<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/public/equipos.php?action=update&id=<?= $equipo['id'] ?>">
+<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/equipos?action=update&id=<?= $equipo['id'] ?>">
     <div class="form-group">
         <label>Número de Activo Fijo *</label>
         <input type="text" name="numero_activo_fijo" value="<?= htmlspecialchars($equipo['numero_activo_fijo']) ?>" required>
@@ -24,5 +24,5 @@
         </select>
     </div>
     <button type="submit" class="btn btn-primary">Actualizar</button>
-    <a href="<?= \App\Core\App::BASE_PATH ?>/public/equipos.php" class="btn btn-secondary">Cancelar</a>
+    <a href="<?= \App\Core\App::BASE_PATH ?>/equipos" class="btn btn-secondary">Cancelar</a>
 </form>

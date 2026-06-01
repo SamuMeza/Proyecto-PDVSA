@@ -13,7 +13,7 @@
                 <div class="page-card">
                     <div class="page-header" style="margin-bottom:1rem;">
                         <h2>Detalle: <?= htmlspecialchars($viewDetalle['codigo_unico']) ?></h2>
-                        <a href="<?= \App\Core\App::BASE_PATH ?>/public/preventivas.php" class="btn btn-outline">&larr; Volver</a>
+                        <a href="<?= \App\Core\App::BASE_PATH ?>/preventivas" class="btn btn-outline">&larr; Volver</a>
                     </div>
                     <div class="form-grid" style="grid-template-columns:1fr 1fr;">
                         <div><strong>Equipo:</strong> <?= htmlspecialchars($viewDetalle['equipo_nombre'] ?? '') ?> (<?= htmlspecialchars($viewDetalle['numero_activo_fijo'] ?? '') ?>)</div>
@@ -108,9 +108,9 @@
                                 <td><span class="tag tag-<?= $orden['estado'] ?>"><?= htmlspecialchars(ucfirst(str_replace('_', ' ', $orden['estado']))) ?></span></td>
                                 <td><?= htmlspecialchars($orden['planificador_nombre'] ?? 'N/A') ?></td>
                                 <td>
-                                    <a href="<?= \App\Core\App::BASE_PATH ?>/public/preventivas.php?view=<?= $orden['id'] ?>" class="btn btn-outline small-action">Ver</a>
+                                    <a href="<?= \App\Core\App::BASE_PATH ?>/preventivas?view=<?= $orden['id'] ?>" class="btn btn-outline small-action">Ver</a>
                                     <?php if ($puedeEditar && $orden['estado'] === 'planificada'): ?>
-                                        <a href="<?= \App\Core\App::BASE_PATH ?>/public/preventivas.php?edit=<?= $orden['id'] ?>" class="btn btn-outline small-action">Editar</a>
+                                        <a href="<?= \App\Core\App::BASE_PATH ?>/preventivas?edit=<?= $orden['id'] ?>" class="btn btn-outline small-action">Editar</a>
                                     <?php endif; ?>
                                     <?php if ($puedeCambiarEstado): ?>
                                         <?php $transiciones = \App\Models\OrdenPreventiva::allowedTransitions($orden['estado']); ?>

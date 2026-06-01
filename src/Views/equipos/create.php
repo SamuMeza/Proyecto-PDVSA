@@ -1,5 +1,5 @@
 <h2>Registrar Equipo</h2>
-<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/public/equipos.php?action=store">
+<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/equipos?action=store">
     <div class="form-group">
         <label>Número de Activo Fijo *</label>
         <input type="text" name="numero_activo_fijo" required>
@@ -50,5 +50,5 @@
         <textarea name="descripcion" rows="3"></textarea>
     </div>
     <button type="submit" class="btn btn-primary">Guardar</button>
-    <a href="<?= \App\Core\App::BASE_PATH ?>/public/equipos.php" class="btn btn-secondary">Cancelar</a>
+    <a href="<?= \App\Core\App::BASE_PATH ?>/equipos" class="btn btn-secondary">Cancelar</a>
 </form>

@@ -2,7 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\App;
-use App\Core\Session;
+use App\Core\Response;
 use App\Services\AuthService;
 
 class DashboardController
@@ -15,8 +15,10 @@ class DashboardController
         $pageTitle = 'Inicio';
         $pageSlug = 'index';
 
-        require dirname(__DIR__, 2) . '/public/includes/layout.php';
-        require dirname(__DIR__, 2) . '/src/Views/dashboard/index.php';
-        require dirname(__DIR__, 2) . '/public/includes/layout_footer.php';
+        Response::view('dashboard/index', [
+            'error' => $error,
+            'pageTitle' => $pageTitle,
+            'pageSlug' => $pageSlug,
+        ]);
     }
 }

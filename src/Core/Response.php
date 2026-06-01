@@ -44,12 +44,18 @@ class Response
     public static function view(string $template, array $data = []): void
     {
         extract($data);
+        ob_start();
         require dirname(__DIR__, 2) . '/src/Views/' . $template . '.php';
+        $content = ob_get_clean();
+        require dirname(__DIR__, 2) . '/src/Views/layouts/main.php';
     }
 
     public static function html(string $template, array $data = [], string $layout = 'main'): void
     {
         extract($data);
+        ob_start();
+        require dirname(__DIR__, 2) . '/src/Views/' . $template . '.php';
+        $content = ob_get_clean();
         require dirname(__DIR__, 2) . "/src/Views/layouts/{$layout}.php";
     }
 }

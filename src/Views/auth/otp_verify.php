@@ -13,7 +13,7 @@
     <input type="text" id="otp_code" name="otp_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus placeholder="000000">
     <button type="submit" class="btn btn-primary">Verificar</button>
 </form>
-<p class="auth-footer"><a href="<?= \App\Core\App::BASE_PATH ?>/auth/login.php">Volver al inicio de sesión</a></p>
+<p class="auth-footer"><a href="<?= \App\Core\App::BASE_PATH ?>/login">Volver al inicio de sesión</a></p>
 </div>
 <script src="<?= \App\Core\App::BASE_PATH ?>/public/assets/js/theme.js"></script>
 </body>

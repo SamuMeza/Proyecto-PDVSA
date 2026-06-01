@@ -79,7 +79,7 @@
                                     <td><span class="tag <?= $equipo['estado'] === 'activo' ? 'tag-active' : 'tag-inactive' ?>"><?= htmlspecialchars(ucfirst($equipo['estado'])) ?></span></td>
                                     <td>
                                         <?php if ($puedeEditar): ?>
-                                            <a href="<?= \App\Core\App::BASE_PATH ?>/public/equipos.php?edit=<?= $equipo['id'] ?>" class="btn btn-outline small-action">Editar</a>
+                                            <a href="<?= \App\Core\App::BASE_PATH ?>/equipos?edit=<?= $equipo['id'] ?>" class="btn btn-outline small-action">Editar</a>
                                         <?php endif; ?>
                                         <?php if ($puedeDesactivar): ?>
                                             <form method="post" style="display:inline-block;" onsubmit="return confirm('¿Desea cambiar el estado de este equipo?');">

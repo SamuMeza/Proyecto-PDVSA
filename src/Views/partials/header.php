@@ -8,6 +8,6 @@
         <span class="header-user">
             <?= htmlspecialchars(\App\Core\Session::get('nombre_completo', '')) ?>
         </span>
-        <a href="<?= \App\Core\App::BASE_PATH ?>/auth/logout.php" class="btn-logout">Cerrar sesión</a>
+        <a href="<?= \App\Core\App::BASE_PATH ?>/logout" class="btn-logout">Cerrar sesión</a>
     </div>
 </header>

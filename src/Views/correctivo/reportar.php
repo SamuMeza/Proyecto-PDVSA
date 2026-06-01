@@ -1,5 +1,5 @@
 <h2>Reportar Falla</h2>
-<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/public/correctivas.php?action=store" enctype="multipart/form-data">
+<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/correctivas?action=store" enctype="multipart/form-data">
     <div class="form-group">
         <label>Equipo *</label>
         <select name="equipo_id" required>

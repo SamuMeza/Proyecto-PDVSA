@@ -7,3 +7,4 @@ uploads/
 Thumbs.db
 .env
 temp/
+composer.phar

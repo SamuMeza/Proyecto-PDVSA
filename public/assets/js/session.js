@@ -1,5 +1,5 @@
 (function () {
-    const KEEPALIVE_URL = BASE_PATH + '/public/session_keepalive.php';
+    const KEEPALIVE_URL = BASE_PATH + '/session/keepalive';
     const THROTTLE_MS = 60000;
     let lastPing = 0;
 
@@ -31,7 +31,7 @@
                 }
             })
             .catch(function () {
-                window.location.href = BASE_PATH + '/auth/login.php';
+                window.location.href = BASE_PATH + '/login';
             });
     }
 

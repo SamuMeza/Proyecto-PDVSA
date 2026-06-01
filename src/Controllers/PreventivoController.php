@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\App;
+use App\Core\Response;
 use App\Core\Session;
 use App\Services\AuthService;
 use App\Services\PreventivaService;
@@ -9,14 +10,13 @@ use App\Models\Equipo;
 use App\Models\User;
 use App\Models\NivelMantenimiento;
 
-class PreventivaController
+class PreventivoController
 {
     public function index(): void
     {
         AuthService::requireAuth();
         if (!PreventivaService::checkAccess()) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-            exit;
+            Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
         }
 
         $equipos = Equipo::allActive();
@@ -71,11 +71,22 @@ class PreventivaController
             $viewDetalle = \App\Models\OrdenPreventiva::findWithDetails($viewId);
         }
 
-        $pageTitle = 'Órdenes Preventivas';
-        $pageSlug = 'preventivas';
-
-        require dirname(__DIR__, 2) . '/public/includes/layout.php';
-        require dirname(__DIR__, 2) . '/src/Views/preventivas/index.php';
-        require dirname(__DIR__, 2) . '/public/includes/layout_footer.php';
+        Response::view('preventivo/index', [
+            'ordenes' => $ordenes,
+            'equipos' => $equipos,
+            'categorias' => $categorias,
+            'planificadores' => $planificadores,
+            'nivelesMantenimiento' => $nivelesMantenimiento,
+            'puedeCrear' => $puedeCrear,
+            'puedeEditar' => $puedeEditar,
+            'puedeCambiarEstado' => $puedeCambiarEstado,
+            'error' => $error,
+            'mensaje' => $mensaje,
+            'formData' => $formData,
+            'viewId' => $viewId,
+            'viewDetalle' => $viewDetalle,
+            'pageTitle' => 'Órdenes Preventivas',
+            'pageSlug' => 'preventivas',
+        ]);
     }
 }

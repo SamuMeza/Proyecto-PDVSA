@@ -8,4 +8,4 @@
         <tr><th>Mantenedor</th><td><?= htmlspecialchars($orden['mantenedor_nombre'] ?? '-') ?></td></tr>
     </table>
 </div>
-<a href="<?= \App\Core\App::BASE_PATH ?>/public/preventivas.php" class="btn btn-secondary">Volver</a>
+<a href="<?= \App\Core\App::BASE_PATH ?>/preventivas" class="btn btn-secondary">Volver</a>

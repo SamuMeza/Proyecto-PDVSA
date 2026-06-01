@@ -1,5 +1,5 @@
 <h2>Cierre de Orden Correctiva</h2>
-<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/public/correctivas.php?action=close&id=<?= $orden['id'] ?>">
+<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/correctivas?action=close&id=<?= $orden['id'] ?>">
     <div class="form-group">
         <label>Acciones Tomadas *</label>
         <textarea name="acciones_tomadas" rows="4" required><?= htmlspecialchars($orden['acciones_tomadas'] ?? '') ?></textarea>

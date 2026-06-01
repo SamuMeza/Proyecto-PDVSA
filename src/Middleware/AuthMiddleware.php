@@ -2,6 +2,7 @@
 namespace App\Middleware;
 
 use App\Core\App;
+use App\Core\Response;
 use App\Core\Session;
 use App\Services\AuthService;
 
@@ -11,8 +12,7 @@ class AuthMiddleware
     {
         Session::start();
         if (!AuthService::check()) {
-            header('Location: ' . App::BASE_PATH . '/auth/login.php');
-            exit;
+            Response::redirect(App::BASE_PATH . '/login');
         }
     }
 
@@ -20,8 +20,7 @@ class AuthMiddleware
     {
         self::authenticated();
         if (!AuthService::isAdmin()) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-            exit;
+            Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
         }
     }
 
@@ -30,8 +29,7 @@ class AuthMiddleware
         return function () use ($module, $action) {
             self::authenticated();
             if (!AuthService::hasPermission($module, $action)) {
-                header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-                exit;
+                Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
             }
         };
     }

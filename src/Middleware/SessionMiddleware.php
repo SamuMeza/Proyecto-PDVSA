@@ -2,6 +2,7 @@
 namespace App\Middleware;
 
 use App\Core\App;
+use App\Core\Response;
 use App\Core\Session;
 use App\Services\AuthService;
 
@@ -17,8 +18,7 @@ class SessionMiddleware
 
         if ($lastActivity > 0 && (time() - $lastActivity) > $timeout) {
             AuthService::logout();
-            header('Location: ' . App::BASE_PATH . '/auth/login.php?error=sesion_expirada');
-            exit;
+            Response::redirect(App::BASE_PATH . '/login?error=sesion_expirada');
         }
 
         Session::set('last_activity', time());

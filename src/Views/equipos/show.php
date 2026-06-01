@@ -12,6 +12,6 @@
     </table>
 </div>
 <div class="actions">
-    <a href="<?= \App\Core\App::BASE_PATH ?>/public/equipos.php?action=edit&id=<?= $equipo['id'] ?>" class="btn btn-primary">Editar</a>
-    <a href="<?= \App\Core\App::BASE_PATH ?>/public/equipos.php" class="btn btn-secondary">Volver</a>
+    <a href="<?= \App\Core\App::BASE_PATH ?>/equipos?action=edit&id=<?= $equipo['id'] ?>" class="btn btn-primary">Editar</a>
+    <a href="<?= \App\Core\App::BASE_PATH ?>/equipos" class="btn btn-secondary">Volver</a>
 </div>

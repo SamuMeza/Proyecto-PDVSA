@@ -1,5 +1,5 @@
 <h3>Checklist de Ejecución</h3>
-<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/public/preventivas.php?action=checklist&id=<?= $ordenId ?>">
+<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/preventivas?action=checklist&id=<?= $ordenId ?>">
     <?php foreach ($checklistItems as $item): ?>
     <div class="form-group checkbox-group">
         <label>

@@ -140,3 +140,81 @@
 .small-action {
     margin-right: 0.5rem;
 }
+
+/* Form labels (non-auth) */
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--text-primary);
+}
+
+/* Form actions row */
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+/* Small buttons */
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* Warning/success button variants */
+.btn-warning {
+    background: #e67e22;
+    color: #fff;
+}
+
+.btn-warning:hover {
+    background: #d35400;
+}
+
+.btn-success {
+    background: #27ae60;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background: #1e8449;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.pagination-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.pagination-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.pagination-link.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}

@@ -32,7 +32,7 @@ class CalendarGenerator
         $dates = [];
         $freq = strtolower($frequency);
 
-        if (str_contains($freq, 'semanal') || str_contains($freq, 'semanal')) {
+        if (str_contains($freq, 'semanal')) {
             for ($w = 1; $w <= 52; $w++) {
                 $dt = new \DateTime();
                 $dt->setISODate($year, $w);

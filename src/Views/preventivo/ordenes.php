@@ -19,7 +19,7 @@
             <td><?= htmlspecialchars($o['estado']) ?></td>
             <td><?= htmlspecialchars($o['mantenedor_nombre'] ?? '-') ?></td>
             <td>
-                <a href="<?= \App\Core\App::BASE_PATH ?>/public/preventivas.php?action=show&id=<?= $o['id'] ?>">Ver</a>
+                <a href="<?= \App\Core\App::BASE_PATH ?>/preventivas?action=show&id=<?= $o['id'] ?>">Ver</a>
             </td>
         </tr>
         <?php endforeach; ?>

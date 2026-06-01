@@ -1,11 +1,27 @@
-# Redirigir la raíz del proyecto hacia public
+# Redirigir todo hacia public/
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /sistema_pdvsa/
 
-    RewriteRule ^$ public/index.php [L]
+    # Si es la raíz exacta, ir a public/
+    RewriteRule ^$ public/ [L]
 
-    # Proteger carpetas sensibles (solo acceso vía PHP interno)
+    # Si ya está en public/, no hacer nada
+    RewriteRule ^public/ - [L]
+
+    # Todo lo demás va a public/index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ public/index.php [QSA,L]
+
+    # Proteger carpetas sensibles
     RewriteRule ^config/ - [F,L]
-    RewriteRule ^sql/ - [F,L]
+    RewriteRule ^database/ - [F,L]
+    RewriteRule ^src/ - [F,L]
+    RewriteRule ^vendor/ - [F,L]
+    RewriteRule ^logs/ - [F,L]
+    RewriteRule ^temp/ - [F,L]
+    RewriteRule ^tests/ - [F,L]
+    RewriteRule ^docs/ - [F,L]
+    RewriteRule ^scripts/ - [F,L]
 </IfModule>

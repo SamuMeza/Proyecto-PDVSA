@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Core\App;
+use App\Core\Response;
 use App\Core\Session;
 use App\Models\User;
 use App\Models\Role;
@@ -104,8 +105,7 @@ class AuthService
     public static function requireAuth(): void
     {
         if (!self::check()) {
-            header('Location: ' . App::BASE_PATH . '/auth/login.php');
-            exit;
+            Response::redirect(App::BASE_PATH . '/login');
         }
     }
 
@@ -125,8 +125,7 @@ class AuthService
     {
         self::requireAuth();
         if (!self::isAdmin()) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-            exit;
+            Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
         }
     }
 
@@ -142,8 +141,7 @@ class AuthService
     {
         self::requireAuth();
         if (!self::hasPermission($module, $action)) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-            exit;
+            Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
         }
     }
 

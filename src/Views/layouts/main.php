@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__DIR__, 2) . '/config/autoload.php';
+require_once dirname(__DIR__, 3) . '/config/autoload.php';
 
 use App\Core\App;
 use App\Core\Session;
@@ -12,20 +12,20 @@ $pageTitle = $pageTitle ?? 'Página';
 $pageSlug  = $pageSlug ?? '';
 
 $navItems = [
-    ['slug' => 'index',       'label' => 'Inicio',           'url' => App::BASE_PATH . '/public/index.php',       'icon' => '⌂'],
-    ['slug' => 'equipos',     'label' => 'Equipos',          'url' => App::BASE_PATH . '/public/equipos.php',     'icon' => '⚙'],
-    ['slug' => 'preventivas', 'label' => 'Órdenes preventivas', 'url' => App::BASE_PATH . '/public/preventivas.php', 'icon' => '📅'],
-    ['slug' => 'calendario', 'label' => 'Calendario', 'url' => App::BASE_PATH . '/public/calendario.php', 'icon' => '🗓'],
-    ['slug' => 'correctivas', 'label' => 'Órdenes correctivas', 'url' => App::BASE_PATH . '/public/correctivas.php', 'icon' => '🔧'],
-    ['slug' => 'reportes',    'label' => 'Reportes',         'url' => App::BASE_PATH . '/public/reportes.php',    'icon' => '📊'],
-    ['slug' => 'usuarios',    'label' => 'Usuarios',         'url' => App::BASE_PATH . '/public/usuarios.php',    'icon' => '👤'],
+    ['slug' => 'index',       'label' => 'Inicio',           'url' => App::BASE_PATH . '/',                'icon' => '⌂'],
+    ['slug' => 'equipos',     'label' => 'Equipos',          'url' => App::BASE_PATH . '/equipos',         'icon' => '⚙'],
+    ['slug' => 'preventivas', 'label' => 'Órdenes preventivas', 'url' => App::BASE_PATH . '/preventivas', 'icon' => '📅'],
+    ['slug' => 'calendario', 'label' => 'Calendario', 'url' => App::BASE_PATH . '/calendario', 'icon' => '🗓'],
+    ['slug' => 'correctivas', 'label' => 'Órdenes correctivas', 'url' => App::BASE_PATH . '/correctivas', 'icon' => '🔧'],
+    ['slug' => 'reportes',    'label' => 'Reportes',         'url' => App::BASE_PATH . '/reportes',        'icon' => '📊'],
+    ['slug' => 'usuarios',    'label' => 'Usuarios',         'url' => App::BASE_PATH . '/usuarios',        'icon' => '👤'],
 ];
 
 if (AuthService::isAdmin()) {
     $navItems[] = [
         'slug'  => 'registrar',
         'label' => 'Registrar usuario',
-        'url'   => App::BASE_PATH . '/auth/register.php',
+        'url'   => App::BASE_PATH . '/register',
         'icon'  => '➕',
     ];
 }
@@ -70,7 +70,7 @@ $logoPath = ConfiguracionSistema::getLogoPath();
                     <strong><?= htmlspecialchars(Session::get('nombre_completo', '')) ?></strong>
                     <?= htmlspecialchars(Session::get('rol_nombre', '')) ?>
                 </div>
-                <a href="<?= App::BASE_PATH ?>/auth/logout.php" class="btn-logout">Cerrar sesión</a>
+                <a href="<?= App::BASE_PATH ?>/logout" class="btn-logout">Cerrar sesión</a>
             </div>
         </aside>
 
@@ -88,3 +88,13 @@ $logoPath = ConfiguracionSistema::getLogoPath();
                 </button>
             </header>
             <main class="page-content">
+                <?= $content ?>
+            </main>
+        </div>
+    </div>
+    <script>var BASE_PATH = '<?= \App\Core\App::BASE_PATH ?>';</script>
+    <script src="<?= \App\Core\App::BASE_PATH ?>/public/assets/js/theme.js"></script>
+    <script src="<?= \App\Core\App::BASE_PATH ?>/public/assets/js/sidebar.js"></script>
+    <script src="<?= \App\Core\App::BASE_PATH ?>/public/assets/js/session.js"></script>
+</body>
+</html>
