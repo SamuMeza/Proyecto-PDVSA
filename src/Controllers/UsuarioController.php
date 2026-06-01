@@ -14,7 +14,7 @@ class UsuarioController
 {
     private const PER_PAGE = 15;
 
-    public function index(): void
+    public function index(array $params = []): void
     {
         AuthService::requireAuth();
         AuthService::requirePermission('usuarios', 'ver');
@@ -28,18 +28,18 @@ class UsuarioController
         $params = [];
 
         if ($search !== '') {
-            $where[] = '(u.nombre_usuario LIKE ? OR u.nombre_completo LIKE ?)';
+            $where[] = '(nombre_usuario LIKE ? OR nombre_completo LIKE ?)';
             $params[] = "%{$search}%";
             $params[] = "%{$search}%";
         }
 
         if ($filtroRol > 0) {
-            $where[] = 'u.rol_id = ?';
+            $where[] = 'rol_id = ?';
             $params[] = $filtroRol;
         }
 
         if ($filtroEstado !== '' && in_array($filtroEstado, ['activo', 'inactivo'])) {
-            $where[] = 'u.estado = ?';
+            $where[] = 'estado = ?';
             $params[] = $filtroEstado;
         }
 
@@ -76,7 +76,7 @@ class UsuarioController
         ]);
     }
 
-    public function create(): void
+    public function create(array $params = []): void
     {
         AuthService::requireAuth();
         AuthService::requirePermission('usuarios', 'crear');
@@ -104,12 +104,12 @@ class UsuarioController
         ]);
     }
 
-    public function edit(): void
+    public function edit(array $params = []): void
     {
         AuthService::requireAuth();
         AuthService::requirePermission('usuarios', 'editar');
 
-        $id = (int) ($_GET['id'] ?? 0);
+        $id = (int) ($params['id'] ?? $_GET['id'] ?? 0);
         $usuario = User::find($id);
         if (!$usuario) {
             Response::notFound();
@@ -150,7 +150,7 @@ class UsuarioController
         ]);
     }
 
-    public function toggleStatus(): void
+    public function toggleStatus(array $params = []): void
     {
         AuthService::requireAuth();
         AuthService::requirePermission('usuarios', 'editar');
@@ -170,7 +170,7 @@ class UsuarioController
         Response::redirect(App::BASE_PATH . '/usuarios');
     }
 
-    public function roles(): void
+    public function roles(array $params = []): void
     {
         AuthService::requireAuth();
         AuthService::requirePermission('usuarios', 'ver');
