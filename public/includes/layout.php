@@ -25,7 +25,7 @@ if (AuthService::isAdmin()) {
     $navItems[] = [
         'slug'  => 'registrar',
         'label' => 'Registrar usuario',
-        'url'   => App::BASE_PATH . '/auth/register.php',
+        'url'   => App::BASE_PATH . '/public/register.php',
         'icon'  => '➕',
     ];
 }

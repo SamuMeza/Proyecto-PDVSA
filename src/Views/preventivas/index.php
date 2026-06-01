@@ -196,4 +196,4 @@
                     </form>
                 </div>
 <?php endif; ?>
-<?php require dirname(__DIR__, 3) . '/public/includes/layout_footer.php'; ?>
+

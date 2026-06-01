@@ -144,4 +144,4 @@
                         </div>
                     </form>
                 </div>
-<?php require dirname(__DIR__, 3) . '/public/includes/layout_footer.php'; ?>
+

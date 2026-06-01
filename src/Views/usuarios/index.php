@@ -7,4 +7,4 @@
                         <p><a href="<?= \App\Core\App::BASE_PATH ?>/auth/register.php" class="btn btn-primary">Registrar nuevo usuario</a></p>
                     <?php endif; ?>
                 </div>
-<?php require dirname(__DIR__, 3) . '/public/includes/layout_footer.php'; ?>
+

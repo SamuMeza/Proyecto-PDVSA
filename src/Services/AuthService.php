@@ -84,13 +84,21 @@ class AuthService
         Session::destroy();
     }
 
+    private static function logDir(): string
+    {
+        return dirname(__DIR__, 2) . '/logs';
+    }
+
     public static function check(): bool
     {
         Session::start();
         if (!Session::has('usuario_id') || !Session::has('sesion_token')) {
+            error_log(date('Y-m-d H:i:s') . ' [AuthService::check] No usuario_id o sesion_token en sesión. session_id=' . session_id() . PHP_EOL, 3, self::logDir() . '/app.log');
             return false;
         }
-        return User::validateSession((int) Session::get('usuario_id'), Session::get('sesion_token'));
+        $valid = User::validateSession((int) Session::get('usuario_id'), Session::get('sesion_token'));
+        error_log(date('Y-m-d H:i:s') . ' [AuthService::check] uid=' . Session::get('usuario_id') . ' token=' . substr(Session::get('sesion_token') ?? '', 0, 8) . '... valid=' . ($valid ? 'true' : 'false') . ' session_id=' . session_id() . PHP_EOL, 3, self::logDir() . '/app.log');
+        return $valid;
     }
 
     public static function requireAuth(): void
@@ -103,8 +111,14 @@ class AuthService
 
     public static function isAdmin(): bool
     {
-        if (!self::check()) return false;
-        return Session::get('rol_nombre') === self::ROL_ADMIN;
+        if (!self::check()) {
+            error_log(date('Y-m-d H:i:s') . ' [AuthService::isAdmin] check() FAILED. session_id=' . session_id() . ' rol=' . Session::get('rol_nombre') . PHP_EOL, 3, self::logDir() . '/app.log');
+            return false;
+        }
+        $rol = Session::get('rol_nombre');
+        $result = $rol === self::ROL_ADMIN;
+        error_log(date('Y-m-d H:i:s') . ' [AuthService::isAdmin] rol=' . var_export($rol, true) . ' ROL_ADMIN=' . self::ROL_ADMIN . ' result=' . ($result ? 'true' : 'false') . ' session_id=' . session_id() . PHP_EOL, 3, self::logDir() . '/app.log');
+        return $result;
     }
 
     public static function requireAdmin(): void

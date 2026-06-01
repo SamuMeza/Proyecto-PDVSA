@@ -1,5 +1,5 @@
 (function () {
-    const KEEPALIVE_URL = BASE_PATH + '/public/session_keepalive.php';
+    const KEEPALIVE_URL = 'session_keepalive.php';
     const THROTTLE_MS = 60000;
     let lastPing = 0;
 
