@@ -55,3 +55,35 @@ php scripts/migrate_mysql_to_postgresql.php
 ```
 
 Variables opcionales: `MYSQL_HOST`, `MYSQL_DB`, `PG_HOST`, `PG_DB`, etc.
+
+## Configuración de TCPDF
+
+### Instalación
+TCPDF se instala automáticamente mediante Composer:
+```bash
+composer install
+```
+
+### Uso
+El sistema utiliza TCPDF para generar reportes PDF. La configuración está en `src/Services/PdfGeneratorService.php`.
+
+### Características
+- **Tamaño de página:** CARTA (Letter)
+- **Orientación:** Vertical (Portrait)
+- **Márgenes:** 15mm izquierda, 10mm derecha
+- **Fuente:** DejaVu Sans (soporta UTF-8)
+- **Header:** Logo PDVSA + título del sistema
+- **Footer:** Paginación + crédito al usuario
+
+### Generación de reportes
+1. Acceder a `/reportes/generar`
+2. Seleccionar tipo de reporte
+3. Configurar filtros
+4. Hacer clic en "Generar Reporte PDF"
+5. Descargar PDF o CSV desde el enlace resultante
+
+### Almacenamiento
+Los archivos se guardan en `storage/reportes-pdf/{año}/{mes}/` (fuera de `public/` para seguridad).
+
+### Limpieza automática
+Los reportes con más de 90 días se eliminan automáticamente al generar un nuevo reporte.

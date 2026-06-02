@@ -61,6 +61,8 @@ class AuthController
             $error = $result['error'] ?? 'Error desconocido.';
         }
 
+        $codigoGenerado = Session::get('otp_codigo');
+
         require dirname(__DIR__, 2) . '/src/Views/layouts/auth.php';
         require dirname(__DIR__, 2) . '/src/Views/auth/otp_verify.php';
     }

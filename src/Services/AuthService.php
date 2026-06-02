@@ -36,6 +36,7 @@ class AuthService
         Session::set('pending_otp_user_id', (int) $user['id']);
         Session::set('pending_otp_usuario', $user['nombre_usuario']);
         Session::set('pending_otp_expires', time() + (self::OTP_TOKEN_MINUTES * 60));
+        Session::set('otp_codigo', $otpResult['codigo']);
 
         return ['ok' => true, 'needs_otp' => true];
     }
@@ -58,6 +59,8 @@ class AuthService
         }
 
         UserOtp::clear($userId);
+        Session::start();
+        Session::remove('otp_codigo');
         return ['ok' => true];
     }
 

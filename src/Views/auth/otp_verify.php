@@ -1,11 +1,11 @@
 <h1>Verificación OTP</h1>
 <p class="auth-subtitle">Ingrese el código de verificación</p>
-<?php if ($codigoGenerado): ?>
+<?php if (!empty($codigoGenerado)): ?>
 <div class="alert alert-info" style="font-size:1.5em;text-align:center;letter-spacing:4px;font-weight:bold;">
     Código de prueba: <?= htmlspecialchars($codigoGenerado) ?>
 </div>
 <?php endif; ?>
-<?php if ($error): ?>
+<?php if (!empty($error)): ?>
     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
 <?php endif; ?>
 <form method="post" class="auth-form">

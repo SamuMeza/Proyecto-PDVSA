@@ -199,7 +199,7 @@ class CorrectivoController
                 $result = CorrectivaService::deletePhoto($fotoId, (int) $foto['orden_correctiva_id']);
                 if ($result['ok']) {
                     $mensaje = $result['message'];
-                    $this->registrarAuditoria('eliminar_foto', (int) $foto['orden_correctiva_id'], null, 'Foto eliminada (ID: ' . $fotoId . ')');
+                    $this->registrarAuditoria('eliminar_foto', (int) $foto['orden_correctiva_id'], null, null, 'Foto eliminada (ID: ' . $fotoId . ')');
                 }
             }
         }
@@ -213,7 +213,7 @@ class CorrectivoController
                 EjecucionChecklistItem::execute('DELETE FROM ejecucion_checklist_items WHERE orden_correctiva_id = ?', [$otId]);
                 OrdenCorrectiva::delete($otId);
                 $mensaje = 'Orden correctiva eliminada: ' . $orden['codigo_unico'];
-                $this->registrarAuditoria('eliminar', $otId, null, 'Orden eliminada: ' . $orden['codigo_unico']);
+                $this->registrarAuditoria('eliminar', $otId, null, null, 'Orden eliminada: ' . $orden['codigo_unico']);
             }
         }
 
@@ -270,11 +270,11 @@ class CorrectivoController
                     [$viewId]
                 );
                 $checklistEjecuciones = EjecucionChecklistItem::raw(
-                    'SELECT eci.*, ci.descripcion AS item_descripcion, ci.es_requerido
+                    'SELECT eci.*, ci.descripcion_tarea AS item_descripcion, ci.es_obligatorio AS es_requerido
                      FROM ejecucion_checklist_items eci
                      LEFT JOIN checklist_items ci ON ci.id = eci.checklist_item_id
                      WHERE eci.orden_correctiva_id = ?
-                     ORDER BY ci.orden ASC, ci.id ASC',
+                     ORDER BY ci.orden_ejecucion ASC, ci.id ASC',
                     [$viewId]
                 );
             }
@@ -315,11 +315,11 @@ class CorrectivoController
                         [$viewIdPost]
                     );
                     $checklistEjecuciones = EjecucionChecklistItem::raw(
-                        'SELECT eci.*, ci.descripcion AS item_descripcion, ci.es_requerido
+'SELECT eci.*, ci.descripcion_tarea AS item_descripcion, ci.es_obligatorio AS es_requerido
                          FROM ejecucion_checklist_items eci
                          LEFT JOIN checklist_items ci ON ci.id = eci.checklist_item_id
                          WHERE eci.orden_correctiva_id = ?
-                         ORDER BY ci.orden ASC, ci.id ASC',
+                          ORDER BY ci.orden_ejecucion ASC, ci.id ASC',
                         [$viewIdPost]
                     );
                 }

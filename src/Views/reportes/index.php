@@ -38,6 +38,13 @@
     </table>
 </div>
 
+<div class="page-card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;">Generar Reportes</h2>
+    <p style="color:var(--text-muted); margin-bottom:1rem;">Genere reportes PDF y CSV con filtros configurables.</p>
+    <a href="<?= \App\Core\App::BASE_PATH ?>/reportes/generar" class="btn btn-primary">Generar Reporte PDF</a>
+    <a href="<?= \App\Core\App::BASE_PATH ?>/reportes/historial" class="btn btn-secondary">Ver Historial</a>
+</div>
+
 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
 
     <div class="page-card">
