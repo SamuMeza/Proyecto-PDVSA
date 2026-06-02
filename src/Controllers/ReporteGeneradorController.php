@@ -123,12 +123,11 @@ class ReporteGeneradorController
         $formato = Request::get('formato', 'pdf');
         
         if ($formato === 'csv') {
-            // Buscar archivo CSV correspondiente
-            $csvPath = str_replace('.pdf', '.csv', $reporte['ruta_archivo']);
-            if (file_exists($csvPath)) {
-                $filePath = $csvPath;
+            // Usar path CSV almacenado en BD
+            if (!empty($reporte['ruta_archivo_csv']) && file_exists($reporte['ruta_archivo_csv'])) {
+                $filePath = $reporte['ruta_archivo_csv'];
                 $contentType = 'text/csv; charset=utf-8';
-                $fileName = str_replace('.pdf', '.csv', $reporte['nombre_archivo_descarga']);
+                $fileName = $reporte['nombre_archivo_csv'] ?? str_replace('.pdf', '.csv', $reporte['nombre_archivo_descarga']);
             } else {
                 Response::notFound();
             }

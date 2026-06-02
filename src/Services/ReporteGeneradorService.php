@@ -75,6 +75,8 @@ class ReporteGeneradorService
             ReporteGenerado::update($reporteId, [
                 'ruta_archivo' => $pdfResult['ruta'],
                 'nombre_archivo_descarga' => $pdfResult['nombre'],
+                'ruta_archivo_csv' => $csvResult['ruta'],
+                'nombre_archivo_csv' => $csvResult['nombre'],
                 'estado' => 'completado',
                 'tamano_bytes' => $pdfResult['tamano'],
                 'duracion_ms' => $duracion,
@@ -180,9 +182,14 @@ class ReporteGeneradorService
             return false;
         }
 
-        // Eliminar archivo físico
+        // Eliminar archivo físico (PDF)
         if (!empty($reporte['ruta_archivo']) && file_exists($reporte['ruta_archivo'])) {
             unlink($reporte['ruta_archivo']);
+        }
+
+        // Eliminar archivo físico (CSV)
+        if (!empty($reporte['ruta_archivo_csv']) && file_exists($reporte['ruta_archivo_csv'])) {
+            unlink($reporte['ruta_archivo_csv']);
         }
 
         // Eliminar registro de BD
@@ -199,7 +206,7 @@ class ReporteGeneradorService
         
         // Obtener reportes viejos
         $stmt = $pdo->prepare("
-            SELECT id, ruta_archivo FROM reportes_generados 
+            SELECT id, ruta_archivo, ruta_archivo_csv FROM reportes_generados 
             WHERE creado_en < DATE_SUB(NOW(), INTERVAL 90 DAY)
         ");
         $stmt->execute();
@@ -207,9 +214,13 @@ class ReporteGeneradorService
 
         $eliminados = 0;
         foreach ($viejos as $reporte) {
-            // Eliminar archivo
+            // Eliminar archivo PDF
             if (!empty($reporte['ruta_archivo']) && file_exists($reporte['ruta_archivo'])) {
                 unlink($reporte['ruta_archivo']);
+            }
+            // Eliminar archivo CSV
+            if (!empty($reporte['ruta_archivo_csv']) && file_exists($reporte['ruta_archivo_csv'])) {
+                unlink($reporte['ruta_archivo_csv']);
             }
             // Eliminar registro
             ReporteGenerado::delete((int) $reporte['id']);
@@ -231,7 +242,7 @@ class ReporteGeneradorService
             case 'fallas':
                 $sql = "SELECT 
                     oc.codigo_unico AS codigo,
-                    e.codigo AS equipo,
+                    e.numero_activo_fijo AS equipo,
                     tf.nombre AS tipo_falla,
                     pf.nombre AS prioridad,
                     z.nombre AS zona,
@@ -280,8 +291,8 @@ class ReporteGeneradorService
             case 'cumplimiento':
                 $sql = "SELECT 
                     op.codigo_unico AS codigo,
-                    e.codigo AS equipo,
-                    nm.nombre AS nivel_mantenimiento,
+                    e.numero_activo_fijo AS equipo,
+                    nm.nombre_nivel AS nivel_mantenimiento,
                     z.nombre AS zona,
                     op.fecha_planificada,
                     op.fecha_cierre_ejecucion,
@@ -407,21 +418,11 @@ class ReporteGeneradorService
     {
         $result = self::construirQuery($tipoReporte, $filtros);
         
-        // Para resumen-mensual y tecnicos que usan GROUP BY, envolver en subquery
-        if (in_array($tipoReporte, ['resumen-mensual', 'tecnicos'])) {
-            return [
-                'sql' => "SELECT COUNT(*) AS cnt FROM (" . $result['sql'] . ") AS sub",
-                'params' => $result['params']
-            ];
-        }
-        
-        // Para fallas y cumplimiento, simplemente contar
-        // Reemplazar SELECT ... FROM por SELECT COUNT(*) AS cnt FROM
-        $sql = preg_replace('/SELECT\s+.*?\s+FROM/', 'SELECT COUNT(*) AS cnt FROM', $result['sql'], 1);
-        // Eliminar ORDER BY si existe
-        $sql = preg_replace('/ORDER BY\s+.*$/i', '', $sql);
-        
-        return ['sql' => $sql, 'params' => $result['params']];
+        // Contar envolviendo en subquery (funciona para todos los tipos)
+        return [
+            'sql' => "SELECT COUNT(*) AS cnt FROM (" . $result['sql'] . ") AS sub",
+            'params' => $result['params']
+        ];
     }
 
     /**

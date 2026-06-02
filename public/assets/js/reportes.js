@@ -37,16 +37,19 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Cargando datos para tipo:', tipo);
     }
 
-    // Construir JSON de filtros desde el formulario
+    // Construir JSON de filtros desde el formulario (solo grupo visible)
     function construirFiltros() {
         const filtros = {};
-        document.querySelectorAll('[data-filter]').forEach(el => {
-            const key = el.getAttribute('data-filter');
-            const value = el.value;
-            if (value) {
-                filtros[key] = value;
-            }
-        });
+        const visibleGroup = document.querySelector('.filtro-group[style*="display: block"]');
+        if (visibleGroup) {
+            visibleGroup.querySelectorAll('[data-filter]').forEach(el => {
+                const key = el.getAttribute('data-filter');
+                const value = el.value;
+                if (value) {
+                    filtros[key] = value;
+                }
+            });
+        }
         return filtros;
     }
 
@@ -108,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         btnGenerar.disabled = true;
         btnGenerar.textContent = 'Generando...';
+        resultadoContainer.style.display = 'none';
 
         try {
             const formData = new FormData();
@@ -130,10 +134,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('btn-descargar-csv').href = 
                     BASE_PATH + '/reportes/descargar/' + data.reporte_id + '?formato=csv';
             } else {
+                resultadoContainer.style.display = 'none';
                 alert(data.error || 'Error al generar el reporte');
             }
         } catch (error) {
             console.error('Error:', error);
+            resultadoContainer.style.display = 'none';
             alert('Error al generar el reporte');
         } finally {
             btnGenerar.disabled = false;
