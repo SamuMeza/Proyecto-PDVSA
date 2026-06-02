@@ -8,6 +8,6 @@ class PrioridadFalla extends Model
 
     public static function allActive(): array
     {
-        return self::findWhere("estado = 'activo'", [], 'orden');
+        return self::findWhere("estado = 'activo'", [], 'nombre');
     }
 }

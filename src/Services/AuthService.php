@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Core\App;
+use App\Core\Response;
 use App\Core\Session;
 use App\Models\User;
 use App\Models\Role;
@@ -35,6 +36,7 @@ class AuthService
         Session::set('pending_otp_user_id', (int) $user['id']);
         Session::set('pending_otp_usuario', $user['nombre_usuario']);
         Session::set('pending_otp_expires', time() + (self::OTP_TOKEN_MINUTES * 60));
+        Session::set('otp_codigo', $otpResult['codigo']);
 
         return ['ok' => true, 'needs_otp' => true];
     }
@@ -57,6 +59,8 @@ class AuthService
         }
 
         UserOtp::clear($userId);
+        Session::start();
+        Session::remove('otp_codigo');
         return ['ok' => true];
     }
 
@@ -84,35 +88,47 @@ class AuthService
         Session::destroy();
     }
 
+    private static function logDir(): string
+    {
+        return dirname(__DIR__, 2) . '/logs';
+    }
+
     public static function check(): bool
     {
         Session::start();
         if (!Session::has('usuario_id') || !Session::has('sesion_token')) {
+            error_log(date('Y-m-d H:i:s') . ' [AuthService::check] No usuario_id o sesion_token en sesión. session_id=' . session_id() . PHP_EOL, 3, self::logDir() . '/app.log');
             return false;
         }
-        return User::validateSession((int) Session::get('usuario_id'), Session::get('sesion_token'));
+        $valid = User::validateSession((int) Session::get('usuario_id'), Session::get('sesion_token'));
+        error_log(date('Y-m-d H:i:s') . ' [AuthService::check] uid=' . Session::get('usuario_id') . ' token=' . substr(Session::get('sesion_token') ?? '', 0, 8) . '... valid=' . ($valid ? 'true' : 'false') . ' session_id=' . session_id() . PHP_EOL, 3, self::logDir() . '/app.log');
+        return $valid;
     }
 
     public static function requireAuth(): void
     {
         if (!self::check()) {
-            header('Location: ' . App::BASE_PATH . '/auth/login.php');
-            exit;
+            Response::redirect(App::BASE_PATH . '/login');
         }
     }
 
     public static function isAdmin(): bool
     {
-        if (!self::check()) return false;
-        return Session::get('rol_nombre') === self::ROL_ADMIN;
+        if (!self::check()) {
+            error_log(date('Y-m-d H:i:s') . ' [AuthService::isAdmin] check() FAILED. session_id=' . session_id() . ' rol=' . Session::get('rol_nombre') . PHP_EOL, 3, self::logDir() . '/app.log');
+            return false;
+        }
+        $rol = Session::get('rol_nombre');
+        $result = $rol === self::ROL_ADMIN;
+        error_log(date('Y-m-d H:i:s') . ' [AuthService::isAdmin] rol=' . var_export($rol, true) . ' ROL_ADMIN=' . self::ROL_ADMIN . ' result=' . ($result ? 'true' : 'false') . ' session_id=' . session_id() . PHP_EOL, 3, self::logDir() . '/app.log');
+        return $result;
     }
 
     public static function requireAdmin(): void
     {
         self::requireAuth();
         if (!self::isAdmin()) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-            exit;
+            Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
         }
     }
 
@@ -128,8 +144,7 @@ class AuthService
     {
         self::requireAuth();
         if (!self::hasPermission($module, $action)) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-            exit;
+            Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
         }
     }
 

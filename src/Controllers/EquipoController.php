@@ -2,6 +2,9 @@
 namespace App\Controllers;
 
 use App\Core\App;
+use App\Core\Database;
+use App\Core\Request;
+use App\Core\Response;
 use App\Core\Session;
 use App\Services\AuthService;
 use App\Services\EquipoService;
@@ -15,8 +18,7 @@ class EquipoController
     {
         AuthService::requireAuth();
         if (!EquipoService::checkAccess()) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-            exit;
+            Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
         }
 
         $pdo = \App\Core\Database::connection();
@@ -63,11 +65,19 @@ class EquipoController
 
         $equipos = EquipoService::listWithFilters();
 
-        $pageTitle = 'Equipos';
-        $pageSlug = 'equipos';
-
-        require dirname(__DIR__, 2) . '/public/includes/layout.php';
-        require dirname(__DIR__, 2) . '/src/Views/equipos/index.php';
-        require dirname(__DIR__, 2) . '/public/includes/layout_footer.php';
+        Response::view('equipos/index', [
+            'equipos' => $equipos,
+            'categorias' => $categorias,
+            'zonas' => $zonas,
+            'familias' => $familias,
+            'puedeCrear' => $puedeCrear,
+            'puedeEditar' => $puedeEditar,
+            'puedeDesactivar' => $puedeDesactivar,
+            'error' => $error,
+            'mensaje' => $mensaje,
+            'formData' => $formData,
+            'pageTitle' => 'Equipos',
+            'pageSlug' => 'equipos',
+        ]);
     }
 }

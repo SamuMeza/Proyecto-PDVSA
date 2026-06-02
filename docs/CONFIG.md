@@ -49,3 +49,20 @@ server {
     }
 }
 ```
+
+## Patrón de Servicios
+
+Todos los servicios del sistema (`AuthService`, `EquipoService`, `PreventivaService`, `CorrectivaService`, `CalendarioService`, `ReporteService`) siguen el patrón de **métodos estáticos**.
+
+### Ventajas
+- Simple de usar: `AuthService::login($user, $pass)`
+- No requiere inyección de dependencias
+- Fácil de testear con mocking estático
+
+### Limitaciones
+- No permite inyección de dependencias (DI)
+- Difícil de mockear en tests unitarios
+- Acoplamiento estático entre clases
+
+### Decisión de diseño
+Se mantiene el patrón estático por simplicidad. Para la próxima iteración mayor, se considerará migrar a servicios con DI usando un contenedor de dependencias.

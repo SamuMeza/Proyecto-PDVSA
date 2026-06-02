@@ -1,5 +1,5 @@
 <h2>Crear Orden Preventiva Manual</h2>
-<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/public/preventivas.php?action=store">
+<form method="POST" action="<?= \App\Core\App::BASE_PATH ?>/preventivas?action=store">
     <div class="form-group">
         <label>Equipo *</label>
         <select name="equipo_id" required>
@@ -21,5 +21,5 @@
         <input type="date" name="fecha_planificada" required>
     </div>
     <button type="submit" class="btn btn-primary">Crear</button>
-    <a href="<?= \App\Core\App::BASE_PATH ?>/public/preventivas.php" class="btn btn-secondary">Cancelar</a>
+    <a href="<?= \App\Core\App::BASE_PATH ?>/preventivas" class="btn btn-secondary">Cancelar</a>
 </form>

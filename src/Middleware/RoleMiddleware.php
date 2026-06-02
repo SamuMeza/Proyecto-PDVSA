@@ -2,6 +2,7 @@
 namespace App\Middleware;
 
 use App\Core\App;
+use App\Core\Response;
 use App\Services\AuthService;
 
 class RoleMiddleware
@@ -12,8 +13,7 @@ class RoleMiddleware
             AuthMiddleware::authenticated();
             $userRole = AuthService::roleName();
             if (!in_array($userRole, $roles, true)) {
-                header('Location: ' . App::BASE_PATH . '/public/index.php?error=sin_permiso');
-                exit;
+                Response::redirect(App::BASE_PATH . '/?error=sin_permiso');
             }
         };
     }

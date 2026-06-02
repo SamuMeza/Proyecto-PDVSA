@@ -12,4 +12,4 @@
         <?php endif; ?>
     </table>
 </div>
-<a href="<?= \App\Core\App::BASE_PATH ?>/public/correctivas.php" class="btn btn-secondary">Volver</a>
+<a href="<?= \App\Core\App::BASE_PATH ?>/correctivas" class="btn btn-secondary">Volver</a>

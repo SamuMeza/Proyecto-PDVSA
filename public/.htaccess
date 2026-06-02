@@ -1,9 +1,12 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /sistema_pdvsa/
+    RewriteBase /sistema_pdvsa/public/
 
-    # Redirect everything to public/index.php (front controller)
+    # Handle root
+    RewriteRule ^$ index.php [L]
+
+    # Redirect all non-file, non-directory requests to front controller
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ public/index.php [QSA,L]
+    RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>

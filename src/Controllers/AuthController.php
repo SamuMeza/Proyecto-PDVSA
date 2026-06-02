@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\App;
+use App\Core\Response;
 use App\Core\Session;
 use App\Services\AuthService;
 use App\Models\User;
@@ -12,8 +13,7 @@ class AuthController
     public function login(): void
     {
         if (AuthService::check()) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php');
-            exit;
+            Response::redirect(App::BASE_PATH . '/');
         }
 
         $error = '';
@@ -23,8 +23,7 @@ class AuthController
             $result = AuthService::login($username, $password);
 
             if ($result['ok'] && ($result['needs_otp'] ?? false)) {
-                header('Location: ' . App::BASE_PATH . '/auth/otp_verify.php');
-                exit;
+                Response::redirect(App::BASE_PATH . '/otp');
             }
             $error = $result['error'] ?? 'Error desconocido.';
         }
@@ -37,14 +36,12 @@ class AuthController
     {
         Session::start();
         if (AuthService::check()) {
-            header('Location: ' . App::BASE_PATH . '/public/index.php');
-            exit;
+            Response::redirect(App::BASE_PATH . '/');
         }
 
         $userId = Session::get('pending_otp_user_id');
         if (!$userId) {
-            header('Location: ' . App::BASE_PATH . '/auth/login.php');
-            exit;
+            Response::redirect(App::BASE_PATH . '/login');
         }
 
         $error = '';
@@ -58,12 +55,13 @@ class AuthController
                     Session::remove('pending_otp_user_id');
                     Session::remove('pending_otp_usuario');
                     Session::remove('pending_otp_expires');
-                    header('Location: ' . App::BASE_PATH . '/public/index.php');
-                    exit;
+                    Response::redirect(App::BASE_PATH . '/');
                 }
             }
             $error = $result['error'] ?? 'Error desconocido.';
         }
+
+        $codigoGenerado = Session::get('otp_codigo');
 
         require dirname(__DIR__, 2) . '/src/Views/layouts/auth.php';
         require dirname(__DIR__, 2) . '/src/Views/auth/otp_verify.php';
@@ -72,8 +70,7 @@ class AuthController
     public function logout(): void
     {
         AuthService::logout();
-        header('Location: ' . App::BASE_PATH . '/auth/login.php');
-        exit;
+        Response::redirect(App::BASE_PATH . '/login');
     }
 
     public function register(): void
@@ -95,11 +92,13 @@ class AuthController
         }
 
         $roles = Role::allActive();
-        $pageTitle = 'Registrar usuario';
-        $pageSlug = 'registrar';
 
-        require dirname(__DIR__, 2) . '/public/includes/layout.php';
-        require dirname(__DIR__, 2) . '/src/Views/auth/register.php';
-        require dirname(__DIR__, 2) . '/public/includes/layout_footer.php';
+        Response::view('auth/register', [
+            'error' => $error,
+            'mensaje' => $mensaje,
+            'roles' => $roles,
+            'pageTitle' => 'Registrar usuario',
+            'pageSlug' => 'registrar',
+        ]);
     }
 }
